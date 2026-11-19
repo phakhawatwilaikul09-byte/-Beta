@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Medieval Village Prototype</title>
+<style>
+:root{--bg:#0b0e14;--fg:#e8dcc0;--ac:#c9a15b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,'Noto Serif Thai',serif;overflow:hidden;touch-action:none}
+canvas{display:block;position:fixed;z-index:0;inset:0;width:100%;height:100%}
+#btn{position:fixed;z-index:5;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);background:#1b1610cc;color:var(--ac);border:1px solid var(--ac);padding:5px 9px;font:inherit;font-size:12px;border-radius:6px}
+#shopBtn{position:fixed;z-index:5;right:12px;top:calc(env(safe-area-inset-top,0px) + 44px);width:38px;height:38px;padding:0;font-size:20px;line-height:1;background:#1b1610cc;border:1px solid var(--ac);border-radius:6px;-webkit-tap-highlight-color:transparent}
+#shopBtn.open{background:var(--ac)}
+#shop{display:none;position:fixed;inset:0;z-index:25;align-items:center;justify-content:center;background:#000a;padding:16px;box-sizing:border-box;touch-action:none}
+.sp{width:min(340px,92vw);max-height:90vh;overflow:auto;touch-action:pan-y;box-sizing:border-box;background:linear-gradient(#241b12f2,#140f0af2);border:2px solid var(--ac);border-radius:10px;padding:16px;text-align:center;box-shadow:0 4px 22px #000,inset 0 0 0 3px #0008;text-shadow:0 1px 3px #000}
+.sp-h{display:flex;justify-content:space-between;align-items:center;color:var(--ac);font-size:18px}
+.sp-x{background:none;border:1px solid var(--ac);color:var(--ac);border-radius:6px;font:inherit;width:34px;height:34px;padding:0}
+.sp-coin{text-align:right;font-size:13px;margin-top:4px;color:#f1d38a}
+.sp-card{margin:10px 0 12px;border:1px solid #c9a15b88;border-radius:8px;padding:12px;background:#0b0e14aa}
+.sp-art{font-size:68px;line-height:1.1;filter:drop-shadow(0 0 14px #ff6a20)}
+.sp-name{color:var(--ac);font-size:17px;margin:4px 0}
+.sp-desc{font-size:13px;line-height:1.5;opacity:.9}
+.sp-tags{margin-top:8px;font-size:12px;color:#ffcf7a}
+.sp-price{margin-top:8px;font-size:16px;color:#f1d38a;min-height:1.4em}
+#shopBuy{width:100%;padding:12px;font:inherit;font-size:16px;background:var(--ac);color:#1b1610;border:0;border-radius:6px}
+#shopBuy.own{background:#3a3226;color:#9a8f78}
+#joy,.sk{display:none}
+@media (pointer:coarse){
+#joy{display:block;position:fixed;z-index:5;left:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 32px);width:130px;height:130px;border-radius:50%;background:#1b161066;border:2px solid #c9a15b88}
+#knob{position:absolute;left:35px;top:35px;width:60px;height:60px;border-radius:50%;background:#c9a15bcc;box-shadow:0 2px 8px #000a}
+.sk{display:block;position:fixed;z-index:5;border-radius:50%;background:#1b1610d9;color:var(--ac);border:2px solid var(--ac);font:inherit;font-size:26px;padding:0;box-shadow:0 2px 10px #000a;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overflow:hidden;touch-action:none}
+.sk::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(#000c calc(var(--cd,0)*360deg),transparent 0);pointer-events:none}
+#atk{right:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 36px);width:96px;height:96px;font-size:38px;border-color:#e0553f;background:#5a1a12e6}
+#dashBtn{right:136px;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);width:64px;height:64px;font-size:26px}
+}
+#shout{position:fixed;text-shadow:0 1px 4px #000}
+#shout{z-index:7;top:28%;left:50%;transform:translateX(-50%);font-size:28px;white-space:pre-line;max-width:90vw;font-weight:bold;color:#ffcf7a;opacity:0;transition:opacity .4s;pointer-events:none;text-align:center}
+#dismountBtn{right:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 232px);width:56px;height:56px;font-size:22px}
+/* ปุ่ม E ลอยตามตัวมังกร (World-to-Screen) — กดค้าง ~0.55 วิ เพื่อขึ้นขี่ */
+#dragonE{position:fixed;z-index:6;left:0;top:0;width:54px;height:54px;margin:0;padding:0;border-radius:50%;display:none;transform:translate(-50%,-50%);--p:0%;border:1.5px solid rgba(214,176,92,.55);background:rgba(27,22,16,.45);color:#fff;font:700 22px system-ui,sans-serif;opacity:.82;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;text-shadow:0 1px 4px #000}
+#dragonE::before{content:"";position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(rgba(255,214,120,.95) var(--p),rgba(255,255,255,.12) 0);-webkit-mask:radial-gradient(circle,transparent 30px,#000 31px);mask:radial-gradient(circle,transparent 30px,#000 31px);pointer-events:none}
+body::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 60%,#0004 100%)}
+@media (pointer:coarse){
+body.riding #flyui{flex-direction:row!important;gap:14px!important;right:135px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 45px)!important}
+}
+#xhair{position:fixed;z-index:6;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;border:2px solid #ff7a20;border-radius:50%;box-shadow:0 0 10px #ff5a10,0 0 22px #ff5a1099,inset 0 0 10px #ff5a1066;pointer-events:none;display:none}
+#xhair::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ffd070;box-shadow:0 0 8px #ff8a20}
+body.firing #xhair{display:block;animation:xhp .35s ease-in-out infinite alternate}
+@keyframes xhp{from{transform:translate(-50%,-50%) scale(.9)}to{transform:translate(-50%,-50%) scale(1.12)}}
+</style></head><body>
+<button id="btn">📷 มุมมอง 3 (V)</button>
+<button id="shopBtn" aria-label="ร้านมังกร">🐉</button>
+<div id="joy"><div id="knob"></div></div>
+<button id="atk" class="sk">⚔️</button>
+<button id="dashBtn" class="sk" aria-label="กลิ้งหลบ">💨</button>
+<div id="shout"></div>
+<button id="dismountBtn" class="sk" style="display:none" aria-label="ลงจากมังกร">⬇️</button>
+<button id="dragonE" aria-label="ขึ้นขี่มังกร (กดค้าง)">E</button>
+<div id="shop"><div class="sp">
+ <div class="sp-h"><span>🐉 ร้านค้ามังกร</span><button class="sp-x" id="shopX">✕</button></div>
+ <div class="sp-coin">💰 เหรียญ: <b id="shopCoin">0</b></div>
+ <div class="sp-card"><div class="sp-art">🐉</div><div class="sp-name">มังกรเพลิง (Fire Dragon)</div>
+  <div class="sp-desc">สัตว์ในตำนานจากคอกลับ บินสำรวจได้ทั่วแผนที่ และพ่นไฟเผาศัตรูให้ราบ</div>
+  <div class="sp-tags">🪽 บินได้ · 🔥 พ่นไฟ</div><div class="sp-price" id="shopPrice"></div></div>
+ <button id="shopBuy"></button>
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const V3=THREE.Vector3,R=(a,b)=>a+Math.random()*(b-a);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+document.body.appendChild(renderer.domElement);
+const scene=new THREE.Scene(),SKY=0xb9d6ea;   // ท้องฟ้ายามเช้า
+scene.background=new THREE.Color(SKY);scene.fog=new THREE.FogExp2(0xd6dfe0,0.0016);
+const cam=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,0.08,1500);cam.near=.08;cam.updateProjectionMatrix();   // near เล็ก กันแขน/อก/อานแหว่งใกล้เลนส์ตอนมุมมองที่ 1
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
+
+// ---------- helpers ----------
+function tex(c,v,rep,w=128){const k=document.createElement('canvas');k.width=k.height=w;const g=k.getContext('2d');g.fillStyle=c;g.fillRect(0,0,w,w);
+ for(let i=0;i<2200;i++){g.fillStyle=Math.random()<.6?`rgba(0,0,0,${Math.random()*v})`:`rgba(255,255,255,${Math.random()*v*.4})`;g.fillRect(Math.random()*w,Math.random()*w,2,2)}
+ const t=new THREE.CanvasTexture(k);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.encoding=THREE.sRGBEncoding;return t}
+const M=(c,r=.9,x={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:r},x));
+const wood=M(0x4a3222),plaster=M(0xa58f68),roofM=M(0x4a2a1e),stone=M(0x6a675f,1),dark=M(0x1a120c),skin=M(0xc79a78);
+const box=(w,h,d,m,x,y,z,p=scene)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;p.add(o);return o};
+const cyl=(rt,rb,h,s,m,x,y,z,p=scene)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,s),m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;p.add(o);return o};
+const col=[];
+
+// ---------- lights & sky ----------
+const hemi=new THREE.HemisphereLight(0xcfe4ff,0x6a5a3c,0.95);scene.add(hemi);
+const moon=new THREE.DirectionalLight(0xffdca8,1.7);   // แสงอาทิตย์ยามเช้า (ใช้ชื่อตัวแปร moon เดิม)
+moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);
+Object.assign(moon.shadow.camera,{left:-60,right:60,top:60,bottom:-60,near:1,far:200});moon.shadow.bias=-0.0006;
+scene.add(moon,moon.target);
+const moonMesh=new THREE.Mesh(new THREE.SphereGeometry(14,16,16),new THREE.MeshBasicMaterial({color:0xfff0c4,fog:false}));moonMesh.position.set(240,170,-300);scene.add(moonMesh);
+{const p=[];for(let i=0;i<600;i++){const a=R(0,6.28),b=R(.15,1.4);p.push(Math.cos(a)*Math.cos(b)*380,Math.sin(b)*380,Math.sin(a)*Math.cos(b)*380)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ var starM=new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,fog:false,transparent:true,opacity:0});var starP=new THREE.Points(g,starM);starP.frustumCulled=false;scene.add(starP)}
+
+// ---------- terrain: grass, river, road ----------
+const OFF=600,RZ=-OFF,VX=70,VZ1=46,VZ2=172,GW=6,PZ=100,WZ=108;let _sg=null;
+function beginShift(){_sg=new THREE.Group();_sg.position.z=-OFF;scene.add(_sg);const g=_sg;scene.add=o=>g.add(o);col.push=(...a)=>a.forEach(c=>Array.prototype.push.call(col,[c[0],c[1]-OFF,c[2]]))}
+function endShift(){delete scene.add;delete col.push}
+const grassT=tex('#2c3a22',.5,60,128),grass=M(0xffffff,1,{map:grassT});
+{const ZA=RZ-140,ZB=VZ2+70,LZ=ZB-ZA,t=grassT.clone();t.needsUpdate=true;t.repeat.set(160,LZ*.2);const g=new THREE.Mesh(new THREE.PlaneGeometry(800,LZ),M(0xffffff,1,{map:t}));g.rotation.x=-Math.PI/2;g.position.set(0,0,(ZA+ZB)/2);g.receiveShadow=true;scene.add(g)}   // พื้นหญ้าผืนเดียวคลุมทั้งแมป
+// ---------- objects ----------
+function wallLine(x1,z1,x2,z2,hmin,hmax,m,skip=0){const dx=x2-x1,dz=z2-z1,n=Math.ceil(Math.hypot(dx,dz)/1.8);
+ for(let i=0;i<=n;i++){if(Math.random()<skip)continue;const x=x1+dx*i/n,z=z1+dz*i/n,h=R(hmin,hmax);
+  const o=box(1.9,h,1.1,m,x,h/2,z);o.rotation.y=-Math.atan2(dz,dx);o.rotation.z=R(-.04,.04);col.push([x,z,1])}}
+function house(x,z,ry,w,d){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);
+ box(w,3,d,plaster,0,1.5,0,g);
+ [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>box(.26,3.1,.26,wood,a*w/2,1.55,b*d/2,g));
+ [1.6,2.9].forEach(y=>[-1,1].forEach(s=>box(w+.05,.18,.12,wood,0,y,s*d/2,g)));
+ const gg=new THREE.ConeGeometry(.7071,1,4);gg.rotateY(Math.PI/4);
+ const r=new THREE.Mesh(gg,roofM);r.scale.set(w+1.2,2.6,d+1.2);r.position.y=4.3;r.castShadow=true;g.add(r);
+ box(.9,.9,.9,stone,w/3,4.4,0,g);
+ box(1,2.1,.1,dark,0,1.05,d/2+.05,g);
+ box(.8,.7,.1,M(0x000000,.5,{emissive:0xffa040,emissiveIntensity:1.4}),w/3,1.9,d/2+.05,g);
+ g.updateMatrixWorld(true);chim.push(g.localToWorld(new V3(w/3,5,0)));col.push([x,z,Math.max(w,d)/2+.3])}
+// ---------- REALISTIC HERO MODEL (Lathe Anatomy + Layered Tunic + Physics Cape) ----------
+function civMats(c){
+ if(man.civ)return man.civ;
+ const W=256,hx=x=>'#'+new THREE.Color(x).getHexString(),sh=(x,t)=>hx(new THREE.Color(x).lerp(new THREE.Color(t>0?0xffffff:0),Math.abs(t)));
+ const cv=()=>{const k=document.createElement('canvas');k.width=k.height=W;return[k,k.getContext('2d')]};
+ const TX=(k,srgb)=>{const t=new THREE.CanvasTexture(k);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(srgb)t.encoding=THREE.sRGBEncoding;return t};
+ const rp=(t,x,y)=>{const q=t.clone();q.repeat.set(x,y);q.needsUpdate=true;return q};
+ const weave=(base,hi,lo,gray,stitch)=>{const[k,g]=cv();g.fillStyle=base;g.fillRect(0,0,W,W);const n=64,s=W/n;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){if((i+j)%2){g.fillStyle=hi;g.fillRect(i*s,j*s+.6,s-.4,s-1.2)}else{g.fillStyle=lo;g.fillRect(i*s+.6,j*s,s-1.2,s-.4)}}
+  for(let i=0;i<2200;i++){g.fillStyle=Math.random()<.5?'rgba(0,0,0,.09)':'rgba(255,255,255,.07)';g.fillRect(R(0,W),R(0,W),R(1,4),1)}
+  g.lineWidth=gray?3:2;g.strokeStyle=gray?'rgba(0,0,0,.42)':'rgba(0,0,0,.18)';
+  for(let i=0;i<12;i++){const x=R(0,W),y=R(0,W);g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+R(-40,40),y+R(10,40),x+R(-60,60),y+R(30,80));g.stroke()}
+  if(stitch){g.fillStyle=gray?'#ffffff':'#d8b46c';for(let x=0;x<W;x+=14)g.fillRect(x+2,W/2-16,8,32)}
+  return k};
+ const skinCv=gray=>{const[k,g]=cv();g.fillStyle=gray?'#8c8c8c':'#cfa07c';g.fillRect(0,0,W,W);
+  if(!gray)for(let i=0;i<40;i++){const x=R(0,W),y=R(0,W),r=R(28,75),q=g.createRadialGradient(x,y,0,x,y,r);q.addColorStop(0,i%2?'rgba(195,105,82,.14)':'rgba(120,78,48,.11)');q.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=q;g.fillRect(x-r,y-r,2*r,2*r)}
+  for(let i=0;i<1800;i++){g.fillStyle=gray?'rgba(40,40,40,.5)':'rgba(120,70,45,.18)';g.beginPath();g.arc(R(0,W),R(0,W),R(.5,1.5),0,6.283);g.fill()}
+  return k};
+ const leatherCv=gray=>{const[k,g]=cv();g.fillStyle=gray?'#808080':'#3e2415';g.fillRect(0,0,W,W);
+  for(let i=0;i<900;i++){const r=R(2,5);g.beginPath();g.ellipse(R(0,W),R(0,W),r,r*R(.6,1),R(0,3.14),0,6.283);g.fillStyle=gray?'rgba(255,255,255,.28)':'rgba(110,70,42,.22)';g.fill();g.lineWidth=1.2;g.strokeStyle=gray?'rgba(0,0,0,.6)':'rgba(15,8,3,.38)';g.stroke()}
+  return k};
+ const hairCv=gray=>{const[k,g]=cv();g.fillStyle=gray?'#808080':'#2b1b10';g.fillRect(0,0,W,W);
+  for(let i=0;i<460;i++){const x=R(0,W),v=R(0,1),w=R(1,2.4),q=v>.5?230:30;g.strokeStyle=gray?`rgba(${q},${q},${q},.55)`:`rgba(${(32+v*55)|0},${(20+v*34)|0},${(10+v*20)|0},.9)`;g.lineWidth=w;g.beginPath();g.moveTo(x,0);g.bezierCurveTo(x+R(-6,6),W*.33,x+R(-6,6),W*.66,x+R(-4,4),W);g.stroke()}
+  return k};
+ const std=(map,bump,rx,ry,bs,r,x={})=>new THREE.MeshStandardMaterial(Object.assign({color:0xffffff,map:rp(map,rx,ry),bumpMap:rp(bump,rx,ry),bumpScale:bs,roughness:r},x));
+ const PC=0x2a2725,CC=0x5c1916,
+  tfC=TX(weave(hx(c),sh(c,.15),sh(c,-.22),0),1),tfB=TX(weave('#707070','#c4c4c4','#4a4a4a',1)),
+  hmC=TX(weave(sh(c,.08),sh(c,.2),sh(c,-.1),0,1),1),hmB=TX(weave('#808080','#d0d0d0','#555555',1,1)),
+  pnC=TX(weave(hx(PC),sh(PC,.14),sh(PC,-.25),0),1),pnB=TX(weave('#707070','#c4c4c4','#4a4a4a',1)),
+  cpC=TX(weave(hx(CC),sh(CC,.16),sh(CC,-.25),0),1),cpB=TX(weave('#707070','#c4c4c4','#4a4a4a',1)),
+  skC=TX(skinCv(0),1),skB=TX(skinCv(1)),lhC=TX(leatherCv(0),1),lhB=TX(leatherCv(1)),hrC=TX(hairCv(0),1),hrB=TX(hairCv(1));
+ return man.civ={
+  skin:std(skC,skB,2,2,.55,.68),skinD:M(0xb57c5e,.78),
+  tunic:std(tfC,tfB,3,2,1.2,.9),sleeve:std(tfC,tfB,2,2,1.2,.9),hem:std(hmC,hmB,10,1,1.2,.88),
+  pants:std(pnC,pnB,2,3,1.2,.94),
+  cape:std(cpC,cpB,2,3,1.3,.92,{side:THREE.DoubleSide}),
+  leather:std(lhC,lhB,2,2,1.5,.74),leatherDS:std(lhC,lhB,6,1,1.5,.74,{side:THREE.DoubleSide}),cord:std(lhC,lhB,1,1,1,.8,{color:0xc9a27a}),
+  sole:M(0x18100a,.9),brass:M(0xc9a248,.3,{metalness:.75}),steel:M(0x8a929e,.35,{metalness:.7}),
+  hair:std(hrC,hrB,2,2,1.4,.82),brow:M(0x22140a,.9),lip:M(0x9e5b52,.48),
+  eyeW:M(0xf4f1ea,.2),iris:M(0x3a5248,.25),pupil:M(0x050505,.2),glint:new THREE.MeshBasicMaterial({color:0xffffff}),dark:M(0x0a0a0c,1)
+ }}
+
+function manCiv(c,s=1){
+ const g=new THREE.Group(),root=new THREE.Group(),hips=new THREE.Group();g.add(root);hips.position.y=.95;root.add(hips);
+ const GC=man.G||(man.G={}),K=civMats(c),PI=Math.PI;
+ const G=(T,...a)=>{const k=T+a;return GC[k]||(GC[k]=new THREE[T+'Geometry'](...a))};
+ const Lathe=(k,pts,seg=20)=>{if(GC[k])return GC[k];const v=new THREE.SplineCurve(pts.map(([r,y])=>new THREE.Vector2(r,y))).getPoints(24);return GC[k]=new THREE.LatheGeometry(v,seg)};
+ const ob=(geo,m,x,y,z,p,sh=1)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=!!sh;p.add(o);return o};
+
+ // ---- 1. ลำตัวทรงนักรบสมส่วน (LatheGeometry ไร้รอยต่อ: เอวคอด-อกผาย-บ่ากว้าง) ----
+ const torso=new THREE.Group();torso.position.y=.03;hips.add(torso);
+ const torsoGeo=Lathe('heroTorso',[[.19,0],[.205,.12],[.22,.26],[.255,.42],[.275,.55],[.22,.63],[.09,.67]],22);
+ ob(torsoGeo,K.tunic,0,0,0,torso).scale.set(1.18,1,.76);
+ ob(G('Sphere',.23,18,12),K.tunic,0,.57,0,torso,0).scale.set(1.32,.48,.82); // บ่าและไหปลาร้า
+ ob(Lathe('heroNeck',[[.072,0],[.062,.06],[.058,.11],[.064,.15]],14),K.skin,0,.64,0,torso,0); // ลำคอเรียวสมจริง
+
+ // คอเสื้อเปิดทรง V + ปกพับ + เชือกร้อยอก
+ {const v=ob(G('Cone',.085,.18,3),K.skin,0,.565,-.205,torso,0);v.rotation.z=PI;v.scale.z=.28}
+ {const cl=ob(G('Torus',.102,.022,6,20,2*PI-1.25),K.hem,0,.665,0,torso,0);cl.rotation.set(PI/2,0,1.5*PI+.625);cl.scale.set(1.08,1.18,1)}
+ [[.59,.068],[.545,.052],[.505,.032]].forEach(([y,w])=>ob(G('Box',w,.007,.008),K.cord,0,y,-.208,torso,0));
+ [-1,1].forEach(a=>{const t=ob(G('Cylinder',.0035,.0035,.095,5),K.cord,a*.012,.45,-.198,torso,0);t.rotation.z=-a*.12});
+
+ // เข็มขัดหนังหนา + หัวเข็มขัดทองเหลือง + กระเป๋าคาดเอว + สายสะพายพาดอก
+ ob(G('Cylinder',.225,.23,.088,22),K.leather,0,.025,0,torso,0).scale.set(1.14,1,.82);
+ ob(G('Box',.078,.062,.022),K.brass,0,.025,-.196,torso,0);ob(G('Box',.046,.034,.024),K.dark,0,.025,-.197,torso,0);
+ ob(G('Box',.036,.12,.009),K.leather,-.048,-.05,-.192,torso,0);
+ {const pg=new THREE.Group();pg.position.set(.205,-.065,-.12);pg.rotation.y=-.7;torso.add(pg);
+  ob(G('Box',.11,.12,.065),K.leather,0,0,0,pg,0);ob(G('Box',.116,.05,.012),K.leather,0,.04,-.036,pg,0);ob(G('Sphere',.011,6,5),K.brass,0,.012,-.044,pg,0)}
+ {const bg=new THREE.Group();bg.position.y=.34;bg.rotation.z=.62;torso.add(bg);
+  ob(G('Cylinder',.278,.278,.068,24,1,true),K.leatherDS,0,0,0,bg,0).scale.set(1.14,1,.78);
+  ob(G('Box',.048,.054,.014),K.brass,0,0,-.224,bg,0)}
+
+ // ---- 2. ผ้าคลุมไหล่ (Cape) แบบมีฟิสิกส์พลิ้วตามแรงวิ่ง/เลี้ยว/กลิ้ง ----
+ {const CW=7,CH=9,capeG=new THREE.PlaneGeometry(.62,1.02,CW-1,CH-1);
+  const pos=capeG.attributes.position,base=new Float32Array(pos.array.length);
+  for(let i=0;i<pos.count;i++){
+   const u=pos.getX(i)/.31,v=.5-pos.getY(i)/1.02; // u: -1..1, v: 0(ไหล่)..1(ชายผ้า)
+   const w=1+.45*v; // ผายกว้างออกด้านล่าง
+   const fold=Math.sin(u*PI*2.5)*(.018+.035*v); // รอยจีบพับของผ้าคลุม
+   pos.setXYZ(i,u*.31*w,-v*1.02,.18+v*.09+fold);
+  }
+  base.set(pos.array);capeG.computeVertexNormals();
+  const capeM=new THREE.Mesh(capeG,K.cape);capeM.position.set(0,.63,.02);capeM.castShadow=true;torso.add(capeM);
+  // เข็มกลัดทองเหลืองยึดผ้าคลุมที่บ่าสองข้าง
+  [-1,1].forEach(a=>ob(G('Cylinder',.028,.028,.014,12),K.brass,a*.23,.62,-.06,torso,0).rotation.x=PI/2);
+  g.userData.cape={mesh:capeM,geo:capeG,base,CW,CH,sway:0,lift:0};
+ }
+
+ // ---- 3. ชายเสื้อทูนิคผ่าหน้า-หลัง (เคลื่อนไหวไม่ทะลุขา) ----
+ const skirtGeo=Lathe('heroSkirt',[[.215,0],[.245,-.12],[.285,-.26],[.315,-.38]],22);
+ ob(skirtGeo,K.tunic,0,0,0,hips).scale.z=.86;
+ ob(G('Cylinder',.312,.316,.038,22),K.hem,0,-.365,0,hips,0).scale.z=.86;
+ ob(G('Sphere',.21,16,10),K.pants,0,-.06,0,hips,0).scale.set(1.08,.75,.84); // สะโพก
+
+ // ---- 4. ศีรษะและใบหน้าสมจริง (โหนกแก้ม-สันกราม-คาง-ตา-ผมทรงนักเดินทาง) ----
+ const head=new THREE.Group();head.position.y=.84;torso.add(head);
+ ob(G('Sphere',.146,24,18),K.skin,0,.025,0,head).scale.set(.92,1.08,1); // กะโหลก
+ ob(G('Sphere',.108,20,14),K.skin,0,-.072,-.028,head,0).scale.set(.94,.88,.96); // กรามเรียว
+ ob(G('Sphere',.036,12,8),K.skin,0,-.128,-.088,head,0).scale.set(.95,.75,.82); // ปลายคาง
+ // สันจมูกและปลายจมูก
+ ob(G('Box',.024,.078,.028),K.skin,0,.016,-.136,head,0).rotation.x=.34;
+ ob(G('Sphere',.021,10,8),K.skin,0,-.034,-.146,head,0).scale.set(.85,.85,1.1);
+ [-1,1].forEach(a=>{
+  ob(G('Sphere',.045,10,8),K.skin,a*.068,-.018,-.095,head,0).scale.set(.85,.8,.85); // โหนกแก้ม
+  ob(G('Sphere',.014,6,5),K.skin,a*.018,-.042,-.144,head,0).scale.set(1,.75,.9); // ปีกจมูก
+  const b=ob(G('Box',.058,.011,.016),K.brow,a*.05,.052,-.138,head,0);b.rotation.z=-a*.11;b.rotation.y=a*.15;
+  ob(G('Sphere',.02,10,8),K.eyeW,a*.05,.02,-.122,head,0).scale.z=.72;
+  ob(G('Sphere',.012,10,8),K.iris,a*.05,.02,-.1325,head,0).scale.z=.55;
+  ob(G('Sphere',.006,8,6),K.pupil,a*.05,.02,-.136,head,0).scale.z=.5;
+  ob(G('Sphere',.0028,6,5),K.glint,a*.05+.0035,.024,-.139,head,0).scale.z=.5;
+  ob(G('Box',.044,.008,.018),K.skin,a*.05,.035,-.134,head,0);
+  ob(G('Sphere',.03,10,8),K.skin,a*.136,-.005,.006,head,0).scale.set(.38,1,.68);
+  ob(G('Sphere',.018,8,6),K.skinD,a*.139,-.005,-.001,head,0).scale.set(.28,.8,.52)});
+ ob(G('Sphere',.021,10,8),K.lip,0,-.081,-.134,head,0).scale.set(1.15,.38,.58);
+ ob(G('Sphere',.02,10,8),K.lip,0,-.098,-.13,head,0).scale.set(1.05,.42,.58);
+ ob(G('Box',.044,.0028,.006),K.dark,0,-.09,-.138,head,0);
+
+ // ทรงผมปอยยาวประบ่าแบบไล่ชั้น (TubeGeometry โค้งรับศีรษะ ไม่เป็นก้อนกลม)
+ const HS=[.95,1.1,1.03],HR=.154;
+ ob(G('Sphere',HR,22,14,0,2*PI,0,1.05),K.hair,0,.028,.006,head,0).scale.set(...HS);
+ ob(G('Sphere',.15,18,12,.3,2.54,1.1,1.3),K.hair,0,-.01,.028,head,0).scale.set(.92,1.08,1);
+ const strand=(pts,r)=>{const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));
+  const m=new THREE.Mesh(new THREE.TubeGeometry(c,8,r,6,false),K.hair);m.castShadow=false;head.add(m)};
+ // ปอยผมด้านหลังและข้างแก้ม
+ for(let i=-4;i<=4;i++){const a=i*.26,sx=Math.sin(a)*.145,sz=Math.cos(a)*.145;
+  strand([[sx*.9,.08,sz*.9],[sx*1.06,-.02,sz*1.06],[sx*1.08,-.13,sz*1.05],[sx*1.02,-.21,sz*.98]],.026)}
+ // ปอยผมหน้าม้าปัดข้าง
+ [[-.08,.13,-.11,-.12,.04,-.135,-.135,-.03,-.125],
+  [-.03,.15,-.115,-.06,.065,-.142,-.075,.01,-.14],
+  [.03,.15,-.115,.055,.065,-.142,.085,.01,-.138],
+  [.08,.13,-.11,.115,.045,-.132,.132,-.025,-.122]].forEach(p=>strand([[p[0],p[1],p[2]],[p[3],p[4],p[5]],[p[6],p[7],p[8]]],.022));
+
+ // ---- 5. แขนสมจริง (หัวไหล่กลมกลึง + กล้ามแขน + ปลอกแขนหนัง + มือ) ----
+ const lu=[],kn=[],ar=[],el=[];
+ const armUpGeo=Lathe('heroArmUp',[[.078,0],[.084,-.08],[.076,-.20],[.064,-.34]],14);
+ const armLoGeo=Lathe('heroArmLo',[[.058,0],[.062,-.07],[.052,-.19],[.041,-.30]],12);
+ [-1,1].forEach(a=>{
+  const A=new THREE.Group();A.position.set(a*.35,.57,0);torso.add(A);
+  const E=new THREE.Group();E.position.y=-.34;A.add(E);
+  ob(G('Sphere',.096,14,12),K.sleeve,0,0,0,A).scale.set(1.05,1.08,.95);
+  ob(armUpGeo,K.sleeve,0,0,0,A);
+  ob(G('Cylinder',.072,.074,.045,14),K.hem,0,-.315,0,A,0);
+  ob(G('Sphere',.052,10,8),K.skin,0,0,0,E,0);
+  ob(armLoGeo,K.skin,0,0,0,E);
+  ob(G('Cylinder',.054,.048,.115,14),K.leather,0,-.235,0,E,0); // ปลอกแขนหนัง
+  [-.195,-.275].forEach(y=>{const r=ob(G('Torus',.053,.0055,5,14),K.leather,0,y,0,E,0);r.rotation.x=PI/2});
+  ob(G('Sphere',.009,6,5),K.brass,0,-.235,-.054,E,0);
+  ob(G('Box',.03,.068,.068),K.skin,0,-.358,0,E,0);
+  [0,1,2,3].forEach(i=>{const len=[.048,.055,.05,.039][i],f=new THREE.Group();f.position.set(0,-.392,-.026+.0175*i);f.rotation.z=-a*.22;E.add(f);
+   ob(G('Cylinder',.0082,.0072,len,6),K.skin,0,-len/2,0,f,0);ob(G('Sphere',.0075,6,5),K.skin,0,-len,0,f,0)});
+  {const th=new THREE.Group();th.position.set(0,-.338,-.036);th.rotation.set(.6,0,-a*.25);E.add(th);
+   ob(G('Cylinder',.009,.008,.044,6),K.skin,0,-.022,0,th,0);ob(G('Sphere',.008,6,5),K.skin,0,-.044,0,th,0)}
+  ar.push(A);el.push(E);
+
+  // ---- 6. ขาและรองเท้าบูทหนังสูง (ต้นขาเรียว-น่อง-ขอบบูทพับ-หัวเข็มขัด) ----
+  const thighGeo=Lathe('heroThigh',[[.108,0],[.104,-.14],[.092,-.30],[.078,-.46]],14);
+  const calfGeo=Lathe('heroCalf',[[.078,0],[.084,-.10],[.074,-.24],[.064,-.36]],14);
+  const L=new THREE.Group();L.position.set(a*.118,0,0);hips.add(L);
+  ob(thighGeo,K.pants,0,0,0,L);
+  const Kn=new THREE.Group();Kn.position.y=-.46;L.add(Kn);
+  ob(G('Sphere',.079,12,10),K.pants,0,0,0,Kn,0);
+  ob(calfGeo,K.pants,0,0,0,Kn,0);
+  ob(G('Cylinder',.075,.064,.27,14),K.leather,0,-.325,0,Kn);
+  ob(G('Cylinder',.084,.082,.048,14),K.leather,0,-.19,0,Kn,0);
+  {const r=ob(G('Torus',.078,.0075,5,14),K.cord,0,-.27,0,Kn,0);r.rotation.x=PI/2}
+  ob(G('Box',.018,.025,.012),K.brass,a*.082,-.27,0,Kn,0);
+  ob(G('Box',.11,.068,.17),K.leather,0,-.464,-.075,Kn,0);
+  ob(G('Sphere',.055,10,8),K.leather,0,-.468,-.16,Kn,0).scale.set(1,.6,1.26);
+  ob(G('Box',.098,.068,.1),K.leather,0,-.47,.03,Kn,0);
+  ob(G('Box',.122,.026,.31),K.sole,0,-.496,-.06,Kn,0);
+  lu.push(L);kn.push(Kn)});
+
+ const spg=new THREE.Group();spg.position.y=-.34;el[1].add(spg);
+ g.userData={root,hips,torso,head,lu,kn,ar,el,shG:null,sp:spg,ph:0,mv:0,ap:-1,roll:-1,gk:0,spd:0,cape:g.userData.cape};
+ g.scale.setScalar(s);scene.add(g);anim(g,0,0,0);return g}
+
+function man(c,helm,s=1,shield=false,knight=false){
+ if(!helm&&!knight&&!shield)return manCiv(c,s);
+ const g=new THREE.Group(),root=new THREE.Group(),hips=new THREE.Group();g.add(root);hips.position.y=.95;root.add(hips);
+ // ---- แชร์ geometry/material ข้ามทุกตัวละคร (ลด GPU memory) / ob(...,0) = ไม่ทอดเงา ----
+ const GC=man.G||(man.G={}),MC=man.Mt||(man.Mt={});
+ const G=(T,...a)=>{const k=T+a;return GC[k]||(GC[k]=new THREE[T+'Geometry'](...a))};
+ const Mt=(col,r=.9,mtl=0)=>{const k=col+'_'+r+'_'+mtl;return MC[k]||(MC[k]=M(col,r,mtl?{metalness:mtl}:{}))};
+ const ob=(geo,m,x,y,z,p,sh=1)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=!!sh;p.add(o);return o};
+ const mc=Mt(c,.8),lt=Mt(0x3a2a1c,.9),sk=Mt(0xc79a78,.8),pm=Mt(0x2a2420,.9),mt=Mt(0x9a9a9a,.35,.8),steel=Mt(0xc8ccd2,.25,.9),
+  st=Mt(0xaab0bb,.38,.45),dk=Mt(0x6a7079,.5,.45),br=Mt(0xb8923a,.4,.5),sl=Mt(0x08080a,1); // st/dk = เหล็กแผ่น (metalness ต่ำ เพราะฉากไม่มี envMap)
+ // ---- ลำตัว: เสื้อเกราะอกโค้งนูน + ชายเกราะซ้อน + เข็มขัด + กระโปรง surcoat สีประจำฝ่าย ----
+ const torso=new THREE.Group();torso.position.y=.03;hips.add(torso);
+ ob(G('Cylinder',.27,.21,.62,10),helm?st:mc,0,.33,0,torso).scale.set(1.15,1,.75);
+ if(helm){
+  ob(G('Sphere',.24,10,8),st,0,.44,-.04,torso).scale.set(1.2,.95,.78);        // อกนูนโค้ง
+  ob(G('Box',.03,.42,.03),dk,0,.4,-.226,torso,0);                              // สันกลางอก
+  [[-.06,.25,.265,st],[-.14,.27,.29,dk]].forEach(([y,r1,r2,m])=>ob(G('Cylinder',r1,r2,.08,10),m,0,y,0,torso,0).scale.set(1.12,1,.88)); // ชายเกราะซ้อน 2 ชั้น
+  ob(G('Cylinder',.12,.15,.1,8),st,0,.68,0,torso,0);                           // คอเกราะ
+ }else ob(G('Cylinder',.06,.07,.1,8),sk,0,.68,0,torso,0);
+ ob(G('Cylinder',.225,.225,.09,10),lt,0,.02,0,torso,0).scale.set(1.12,1,.82);  // เข็มขัด
+ ob(G('Box',.07,.07,.03),br,0,.02,-.19,torso,0);                               // หัวเข็มขัด
+ ob(G('Cylinder',.22,.31,.34,10),mc,0,-.13,0,hips).scale.z=.85;                 // กระโปรง
+ // ---- ศีรษะ: ใส่หมวกแล้วปิดมิดชิด / knight = Great Helm, อื่น ๆ = Bascinet ----
+ const head=new THREE.Group();head.position.y=.84;torso.add(head);
+ if(helm&&knight){
+  ob(G('Cylinder',.19,.2,.36,10),st,0,.01,0,head);                             // ตัวหมวกทรงถัง
+  ob(G('Cylinder',.2,.2,.03,10),dk,0,.2,0,head,0);                             // แผ่นปิดบน
+  ob(G('Box',.03,.32,.02),dk,0,0,-.195,head,0);                                // แถบเสริมตั้ง
+  ob(G('Box',.16,.035,.02),sl,0,.05,-.19,head,0);                              // ช่องมองแนวนอน
+  ob(G('Box',.03,.09,.02),sl,0,-.03,-.19,head,0);                              // ช่องมองแนวตั้ง (กากบาท)
+ }else if(helm){
+  ob(G('Sphere',.18,12,10),st,0,.02,.005,head).scale.set(1,1.12,1.06);         // โดมหมวก
+  ob(G('Cylinder',.17,.2,.12,10),dk,0,-.14,.02,head,0);                        // เกราะคลุมคอ (aventail)
+  ob(G('Cone',.105,.2,8),st,0,-.015,-.205,head,0).rotation.x=-Math.PI/2;       // หน้ากากปากแหลม
+  ob(G('Box',.17,.02,.02),sl,0,.045,-.185,head,0);                             // ช่องมอง
+  const rg=ob(G('Torus',.2,.014,5,10,Math.PI),dk,0,.02,.005,head,0);rg.scale.set(.95,1,1);rg.rotation.y=Math.PI/2; // สันหมวก
+ }else{
+  ob(G('Sphere',.15,14,12),sk,0,0,0,head).scale.y=1.1;
+  [-1,1].forEach(a=>ob(G('Sphere',.018,6,6),pm,a*.055,.02,-.135,head,0));
+  ob(G('Sphere',.165,12,10,0,6.283,0,1.5),Mt(0x3a2a1a),0,.03,.01,head,0);
+ }
+ // ---- แขน (ไหล่เกราะซ้อน 3 ชั้น) + ขา (หัวเข่า/แข้งเกราะ) ----
+ const lu=[],kn=[],ar=[],el=[];
+ [-1,1].forEach(a=>{
+  const A=new THREE.Group();A.position.set(a*.36,.58,0);torso.add(A);
+  const E=new THREE.Group();E.position.y=-.34;A.add(E);
+  if(helm){
+   ob(G('Sphere',.12,10,8),st,a*.02,.02,0,A).scale.set(1.2,.8,1.1);            // ฝาไหล่
+   ob(G('Cylinder',.125,.105,.07,10),dk,a*.015,-.07,0,A,0);                    // แผ่นซ้อนชั้น 1
+   ob(G('Cylinder',.11,.092,.07,10),st,a*.01,-.13,0,A,0);                      // แผ่นซ้อนชั้น 2
+  }else ob(G('Sphere',.1,10,8),mc,0,0,0,A);
+  ob(G('Cylinder',.075,.06,.34,8),mc,0,-.17,0,A);
+  ob(G('Cylinder',.058,.05,.32,8),helm?st:sk,0,-.16,0,E,0);                    // ปลอกแขนท่อนล่าง
+  ob(G('Sphere',.06,8,8),helm?dk:sk,0,-.34,0,E,0);                             // ถุงมือเกราะ
+  if(helm)ob(G('Sphere',.068,8,6),st,0,0,0,E,0);                               // ข้อศอก
+  ar.push(A);el.push(E);
+  const L=new THREE.Group();L.position.set(a*.12,0,0);hips.add(L);
+  ob(G('Cylinder',.1,.075,.46,8),pm,0,-.23,0,L);
+  const K=new THREE.Group();K.position.y=-.46;L.add(K);
+  ob(G('Sphere',helm?.088:.078,8,8),helm?st:pm,0,0,0,K,0);                     // เกราะหัวเข่า
+  ob(G('Cylinder',.075,.06,.44,8),helm?st:pm,0,-.22,0,K);                      // เกราะแข้ง
+  ob(G('Box',.13,.1,.28),helm?dk:lt,0,-.46,-.05,K,0);                          // รองเท้าเกราะ
+  lu.push(L);kn.push(K)});
+ // ---- โล่ทรงฮีตเตอร์ (ขึ้นรูปครั้งเดียวแล้วแชร์) ----
+ const HS=GC.heater||(GC.heater=(()=>{const p=new THREE.Shape();p.moveTo(-.2,.2);p.lineTo(.2,.2);p.lineTo(.2,-.02);p.quadraticCurveTo(.19,-.2,0,-.32);p.quadraticCurveTo(-.19,-.2,-.2,-.02);p.closePath();
+  return new THREE.ExtrudeGeometry(p,{depth:.03,bevelEnabled:false,curveSegments:4})})());
+ const shieldAt=(p,x,y,z,ry)=>{const q=new THREE.Group();q.position.set(x,y,z);q.rotation.y=ry;p.add(q);
+  ob(HS,dk,0,0,-.012,q,0).scale.set(1.1,1.08,1);                               // ขอบโล่
+  ob(HS,mc,0,0,0,q);                                                           // หน้าโล่สีประจำฝ่าย
+  ob(G('Sphere',.045,8,6),mt,0,-.02,.03,q,0).scale.z=.5;return q};                      // ปุ่มกลางโล่
+ let shG=null;if(shield)shieldAt(el[0],-.1,-.12,-.04,-Math.PI/2);                           // ถือที่แขนซ้าย
+ else if(knight){shG=shieldAt(torso,0,.46,.205,0);ob(G('Box',.045,.62,.02),lt,0,.33,-.215,torso,0).rotation.z=.6} // สะพายหลัง + สายพาดอก
+ // ---- อาวุธ ----
+ const spg=new THREE.Group();spg.position.y=-.34;el[1].add(spg);
+ const hipSword=()=>{const h=new THREE.Group();h.position.set(-.31,0,0);h.rotation.set(2.45,0,.1);hips.add(h); // ดาบยาวพกข้างเอว: ด้าม + ซอง
+  ob(G('Cylinder',.024,.024,.34,8),lt,0,-.04,0,h,0);ob(G('Sphere',.04,8,8),mt,0,-.22,0,h,0);ob(G('Box',.34,.04,.05),mt,0,.14,0,h,0);
+  ob(G('Box',.065,.95,.035),lt,0,.64,0,h,0);ob(G('Box',.08,.06,.045),mt,0,.2,0,h,0);ob(G('Box',.075,.07,.045),mt,0,1.12,0,h,0);return h};
+ let kd=null;
+ if(!knight){ob(G('Cylinder',.025,.025,2.4,6),wood,0,.5,0,spg);ob(G('Cone',.06,.3,6),mt,0,1.8,0,spg);if(helm)hipSword()}
+ else{const sw=new THREE.Group(),ax=new THREE.Group(),bl=new THREE.Group();
+  // อาวุธที่ถือในมือ (ขนาดเดิม — updTrail/setWep ยังใช้ได้) แสดงเฉพาะตอนอยู่ในมือ
+  ob(G('Cylinder',.024,.024,.34,8),lt,0,-.04,0,sw);ob(G('Sphere',.04,8,8),mt,0,-.22,0,sw);ob(G('Box',.34,.04,.05),mt,0,.14,0,sw);sw.add(bl);
+  ob(G('Box',.09,1.05,.02),steel,0,.68,0,bl);ob(G('Cone',.0495,.14,4),steel,0,1.22,0,bl).scale.z=.28;
+  ob(G('Cylinder',.03,.03,1.1,8),wood,0,.4,0,ax);ob(G('Box',.06,.22,.12),mt,0,.88,-.03,ax);ob(G('Box',.04,.3,.14),steel,0,.86,-.12,ax);ob(G('Cone',.03,.14,4),mt,0,.88,.1,ax).rotation.x=Math.PI/2;
+  // อาวุธบนตัว (มองเห็นตลอดในมุมมองที่ 3): ดาบที่เอวซ้าย + ขวานพาดหลังระดับเอว
+  // ซ่อนอัตโนมัติเฉพาะเล่มที่กำลังถืออยู่ในมือ (อ่านจาก userData.type / inHand จึงไม่ต้องแก้ setWep)
+  const hs=hipSword(),hA=new THREE.Group();hA.position.set(-.3,.04,.255);hA.rotation.set(Math.PI,0,-Math.PI/2);hA.scale.setScalar(.8);hips.add(hA);
+  ob(G('Cylinder',.03,.03,1.1,8),wood,0,.4,0,hA,0);ob(G('Box',.06,.22,.12),mt,0,.88,-.03,hA,0);ob(G('Box',.04,.3,.14),steel,0,.86,-.12,hA,0);ob(G('Cone',.03,.14,4),mt,0,.88,.1,hA,0).rotation.x=Math.PI/2;
+  [[hs,'sword'],[hA,'axe']].forEach(([o,k])=>Object.defineProperty(o,'visible',{get:()=>!(g.userData.inHand&&g.userData.type===k)&&!g.userData.rolling,set(){}}));
+  // setWep() เดิมเรียก u.mount.add(w) / u.sheath.visible: ใช้ตัวแทนเบา ๆ — ตอนเก็บอาวุธให้ถอดออกจากมือ (ภาพบนเอวใช้โมเดลด้านบนแทน)
+  kd={sword:sw,axe:ax,blade:bl,sheath:{visible:true},mount:{add:w=>{if(w.parent)w.parent.remove(w)}}}}
+ g.userData={root,hips,torso,head,lu,kn,ar,el,shG,sp:spg,ph:0,mv:0,ap:-1,roll:-1,gk:0,spd:0};
+ if(kd){Object.assign(g.userData,kd,{knight:true,type:'sword',drawn:false,inHand:false,dp:-1,dsh:false})}
+ g.scale.setScalar(s);scene.add(g);anim(g,0,0,0);return g}
+const RDY=[.8,.9,-.3,0,0,0,0],HK=[
+ [[-2.1,.5,.6,-.9,.25,-.9,-.6],[1.25,.2,-1.4,.7,-.35,.5,.9]],   // 1 ฟันเฉียงขวาลงซ้าย
+ [[1.2,.4,-1.3,1.2,.05,-1.2,0],[1.2,.4,-1.3,-1.2,-.12,.3,-1.4]], // 2 ตวัดซ้ายไปขวาแนวขวาง
+ [[.1,.7,1.8,-.7,-.3,.3,.4],[2.4,.3,-.2,.6,.15,-.4,-.5]],       // 3 เสยเฉียงขึ้น
+ [[-2.7,.3,1.1,-.6,.4,0,0],[1.3,.1,-1.55,.3,-.6,0,0]],           // 4 ง้างเหนือหัว ผ่ากลางลงพื้น
+ [[1.2,.5,-1.4,-1.1,.2,-.5,-.3],[1.2,.5,-1.4,1,-.25,.4,.3]]];   // 5 หมุนตัวกวาดรอบ
+// ความลึกย่อเข่า / ก้าวพุ่ง / แขนซ้ายกาง (1 = ฟันมือเดียว) ต่อคอมโบ 0-4
+const HKDIP=[.8,.7,.9,1,1.4],HKSTP=[.35,.15,.5,.7,.9],HK1H=[1,0,0,1,0];
+// ---------- ANIMATION กลาง: animateHumanoid(entity,dt) ใช้ร่วมกันทั้งผู้เล่นและ NPC ----------
+const CL=(v,a,b)=>Math.max(a,Math.min(b,v)),LP=(x,y,q)=>x+(y-x)*q,SS=q=>{q=CL(q,0,1);return q*q*(3-2*q)},DMP=(c,t,r,dt)=>c+(t-c)*(1-Math.exp(-r*dt));
+const FLASH=M(0xff2a18,.6,{emissive:0xff1000,emissiveIntensity:.9});
+function setFlash(m,on){const u=m.userData;if(!!u.fl===on)return;u.fl=on;
+ if(on){u.fm=[];m.traverse(o=>{if(o.isMesh&&o.material!==FLASH){o.userData.m0=o.material;o.material=FLASH;u.fm.push(o)}})}
+ else if(u.fm){u.fm.forEach(o=>o.material=o.userData.m0);u.fm=null}}
+// ฝุ่นตอนกลิ้ง (InstancedMesh พูลเดียว)
+const DN=48,dustM=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.2,0),new THREE.MeshBasicMaterial({color:0x9a8a6e,transparent:true,opacity:.5,depthWrite:false}),DN),DO=new THREE.Object3D(),dpt=Array.from({length:DN},()=>({l:0,L:1,s:1,x:0,y:0,z:0,vx:0,vy:0,vz:0}));let dI=0;
+dustM.frustumCulled=false;DO.scale.setScalar(0);DO.updateMatrix();for(let i=0;i<DN;i++)dustM.setMatrixAt(i,DO.matrix);scene.add(dustM);
+function dust(x,z,n,dx=0,dz=0){for(let i=0;i<n;i++){const p=dpt[dI=(dI+1)%DN];p.x=x+R(-.25,.25);p.y=.1;p.z=z+R(-.25,.25);p.vx=dx*R(.2,.7)+R(-.8,.8);p.vy=R(.4,1.3);p.vz=dz*R(.2,.7)+R(-.8,.8);p.L=p.l=R(.45,.85);p.s=R(.7,1.4)}}
+function updDust(dt){for(let i=0;i<DN;i++){const p=dpt[i];let sc=0;
+  if(p.l>0){p.l-=dt;const q=1-Math.max(0,p.l)/p.L;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vx*=1-2*dt;p.vz*=1-2*dt;p.vy*=1-2.5*dt;sc=p.s*(.35+q*1.1)*(1-q*q)}
+  DO.position.set(p.x,p.y,p.z);DO.scale.setScalar(Math.max(0,sc));DO.updateMatrix();dustM.setMatrixAt(i,DO.matrix)}
+ dustM.instanceMatrix.needsUpdate=true}
+// ---------- SPARKS (เหล็กกระทบกัน) + เสียงดาบ ----------
+const SN=96,sparkM=new THREE.InstancedMesh(new THREE.BoxGeometry(.035,.035,.22),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),SN),SPO=new THREE.Object3D(),SC=new THREE.Color(),
+ spt=Array.from({length:SN},()=>({l:0,L:1,x:0,y:0,z:0,vx:0,vy:0,vz:0})),clashL=new THREE.PointLight(0xffb060,0,16,2);let sI=0,clT=0,AC=null;
+sparkM.frustumCulled=false;SPO.scale.setScalar(0);SPO.updateMatrix();for(let i=0;i<SN;i++){sparkM.setMatrixAt(i,SPO.matrix);sparkM.setColorAt(i,SC.setRGB(1,1,1))}scene.add(sparkM,clashL);
+const aud=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
+['pointerdown','keydown'].forEach(k=>addEventListener(k,()=>{try{aud().resume()}catch(e){}},{once:true}));
+
+// ---------- AUDIO SET 1: เสียงฝีเท้าบนหญ้า & เสียงกลิ้งหลบ ----------
+const playerSfx=(()=>{
+ let nBuf=null;
+ const getNoise=c=>{if(nBuf)return nBuf;const len=c.sampleRate,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;return nBuf=b};
+ function step(run){try{const c=aud();if(c.state==='suspended')c.resume();const t=c.currentTime,vol=run?.24:.11;
+  // เสียงสวบสาบใบหญ้า
+  const src=c.createBufferSource();src.buffer=getNoise(c);
+  const flt=c.createBiquadFilter(),g=c.createGain();
+  flt.type='bandpass';flt.Q.value=1.8;flt.frequency.setValueAtTime((run?1400:1100)+R(-150,200),t);flt.frequency.exponentialRampToValueAtTime(520,t+.09);
+  g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.001,t+.11);
+  src.connect(flt);flt.connect(g);g.connect(c.destination);src.start(t);src.stop(t+.12);
+  // เสียงน้ำหนักเท้าลงพื้นดิน
+  const osc=c.createOscillator(),og=c.createGain();osc.type='sine';
+  osc.frequency.setValueAtTime(run?95:75,t);osc.frequency.exponentialRampToValueAtTime(36,t+.07);
+  og.gain.setValueAtTime(vol*.75,t);og.gain.exponentialRampToValueAtTime(.001,t+.08);
+  osc.connect(og);og.connect(c.destination);osc.start(t);osc.stop(t+.09);
+ }catch(e){}}
+ function roll(){try{const c=aud();if(c.state==='suspended')c.resume();const t=c.currentTime;
+  // เสียงแหวกอากาศ + ผ้าคลุมสะบัดตอนพุ่งกลิ้ง
+  const src=c.createBufferSource();src.buffer=getNoise(c);
+  const flt=c.createBiquadFilter(),g=c.createGain();
+  flt.type='bandpass';flt.Q.value=1.2;flt.frequency.setValueAtTime(380,t);flt.frequency.exponentialRampToValueAtTime(1150,t+.18);flt.frequency.exponentialRampToValueAtTime(280,t+.48);
+  g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(.32,t+.12);g.gain.exponentialRampToValueAtTime(.001,t+.5);
+  src.connect(flt);flt.connect(g);g.connect(c.destination);src.start(t);src.stop(t+.52);
+  // เสียงตัวกระแทกพื้นหญ้าเบาๆ
+  const osc=c.createOscillator(),og=c.createGain();osc.type='triangle';
+  osc.frequency.setValueAtTime(110,t+.05);osc.frequency.exponentialRampToValueAtTime(38,t+.25);
+  og.gain.setValueAtTime(.25,t+.05);og.gain.exponentialRampToValueAtTime(.001,t+.26);
+  osc.connect(og);og.connect(c.destination);osc.start(t+.05);osc.stop(t+.27);
+ }catch(e){}}
+ return{step,roll};
+})();
+
+// ---------- AUDIO SET 2: เสียงกระพือปีกมังกร (ซิงก์จังหวะกดปีก + ระยะห่าง) ----------
+const dragonWingSfx=(()=>{
+ let nBuf=null;
+ const getNoise=c=>{if(nBuf)return nBuf;const len=c.sampleRate*2,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<len;i++){const w=Math.random()*2-1;l=(l+.08*w)/1.08;d[i]=l*2.5+w*.12}return nBuf=b};
+ return function(pwr,dist){
+  if(pwr<.12||dist>95)return;
+  try{
+   const c=aud();if(c.state==='suspended')c.resume();
+   const t=c.currentTime,att=Math.max(0,1-dist/95),vol=CL(pwr,0,1.3)*att*.48;
+   if(vol<.01)return;
+   // 1. เสียงลมขนาดใหญ่แหวกอากาศ ("พรึ่บ")
+   const src=c.createBufferSource();src.buffer=getNoise(c);
+   const flt=c.createBiquadFilter(),g=c.createGain();
+   flt.type='bandpass';flt.Q.value=.95;
+   flt.frequency.setValueAtTime(110+pwr*55,t);
+   flt.frequency.exponentialRampToValueAtTime(340+pwr*120,t+.14);
+   flt.frequency.exponentialRampToValueAtTime(95,t+.46);
+   g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(vol,t+.09);g.gain.exponentialRampToValueAtTime(.001,t+.48);
+   src.connect(flt);flt.connect(g);g.connect(c.destination);src.start(t);src.stop(t+.5);
+   // 2. แรงอัดอากาศทุ้มต่ำจากพังผืดปีก ("พึ่บ")
+   const osc=c.createOscillator(),og=c.createGain();osc.type='sine';
+   osc.frequency.setValueAtTime(62+pwr*18,t+.03);osc.frequency.exponentialRampToValueAtTime(26,t+.32);
+   og.gain.setValueAtTime(.001,t+.03);og.gain.linearRampToValueAtTime(vol*.85,t+.1);og.gain.exponentialRampToValueAtTime(.001,t+.34);
+   osc.connect(og);og.connect(c.destination);osc.start(t+.03);osc.stop(t+.36);
+  }catch(e){}
+ };
+})();
+
+// ---------- AUDIO SET 3: เสียงฝีเท้าหนัก & เสียงคำรามของมังกร ----------
+const dragonGroundSfx=(()=>{
+ let nBuf=null;
+ const getNoise=c=>{if(nBuf)return nBuf;const len=c.sampleRate,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;return nBuf=b};
+ function step(pwr,dist){
+  if(dist>80)return;
+  try{const c=aud();if(c.state==='suspended')c.resume();const t=c.currentTime,vol=CL(pwr,0,1.4)*(1-dist/80)*.42;if(vol<.01)return;
+   // แรงกระแทกพื้นหนักๆ
+   const osc=c.createOscillator(),og=c.createGain();osc.type='sine';
+   osc.frequency.setValueAtTime(58+pwr*16,t);osc.frequency.exponentialRampToValueAtTime(22,t+.22);
+   og.gain.setValueAtTime(vol,t);og.gain.exponentialRampToValueAtTime(.001,t+.24);
+   osc.connect(og);og.connect(c.destination);osc.start(t);osc.stop(t+.25);
+   // เสียงกรงเล็บย่ำหญ้า/ดิน
+   const src=c.createBufferSource();src.buffer=getNoise(c);
+   const flt=c.createBiquadFilter(),g=c.createGain();flt.type='bandpass';flt.Q.value=1.4;
+   flt.frequency.setValueAtTime(480+R(-80,100),t);flt.frequency.exponentialRampToValueAtTime(180,t+.14);
+   g.gain.setValueAtTime(vol*.45,t);g.gain.exponentialRampToValueAtTime(.001,t+.15);
+   src.connect(flt);flt.connect(g);g.connect(c.destination);src.start(t);src.stop(t+.16);
+  }catch(e){}
+ }
+ function roar(big,dist=0){
+  if(dist>110)return;
+  try{const c=aud();if(c.state==='suspended')c.resume();const t=c.currentTime,dur=big?1.15:.65,vol=(big?.44:.22)*(1-dist/110);if(vol<.01)return;
+   const flt=c.createBiquadFilter(),g=c.createGain();flt.type='lowpass';flt.Q.value=3.2;
+   flt.frequency.setValueAtTime(big?190:140,t);flt.frequency.linearRampToValueAtTime(big?340:210,t+dur*.3);flt.frequency.exponentialRampToValueAtTime(95,t+dur);
+   g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(vol,t+dur*.22);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+   flt.connect(g);g.connect(c.destination);
+   [big?54:44,big?81:66].forEach((f,i)=>{const o=c.createOscillator(),og=c.createGain();o.type=i?'triangle':'sawtooth';
+    o.frequency.setValueAtTime(f,t);o.frequency.linearRampToValueAtTime(f*1.18,t+dur*.25);o.frequency.exponentialRampToValueAtTime(f*.68,t+dur);
+    og.gain.value=i?.6:.4;o.connect(og);og.connect(flt);o.start(t);o.stop(t+dur+.02)});
+  }catch(e){}
+ }
+ return{step,roar};
+})();
+
+// ---------- AUDIO SET 4: เสียงลมปะทะความเร็วสูง (High-Speed Wind Rush) ----------
+const flightWindSfx=(()=>{
+ let st=null;
+ function init(){
+  if(st)return st;
+  try{
+   const c=aud(),len=c.sampleRate*2,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);
+   for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+   const src=c.createBufferSource();src.buffer=b;src.loop=true;
+   const flt=c.createBiquadFilter(),g=c.createGain();
+   flt.type='bandpass';flt.Q.value=1.35;flt.frequency.value=220;
+   g.gain.value=0.0001;
+   src.connect(flt);flt.connect(g);g.connect(c.destination);
+   src.start();
+   return st={c,flt,g};
+  }catch(e){return null}
+ }
+ return function(spd,vy,riding,onGnd){
+  if(!riding||onGnd){if(st)st.g.gain.setTargetAtTime(.0001,st.c.currentTime,.18);return}
+  const s=init();if(!s)return;
+  if(s.c.state==='suspended')s.c.resume();
+  const t=s.c.currentTime,totSpd=Math.hypot(spd,vy*1.15);
+  const k=CL((totSpd-5)/36,0,1);
+  s.flt.frequency.setTargetAtTime(190+k*680,t,.12);
+  s.flt.Q.setTargetAtTime(1.1+k*1.6,t,.15);
+  s.g.gain.setTargetAtTime(k>.02?.008+k*k*.28:.0001,t,.14);
+ };
+})();
+
+// ---------- AUDIO SET 5: เสียงบรรยากาศป่า & เสียงนกร้องยามเช้า ----------
+const forestAmbienceSfx=(()=>{
+ let st=null,birdT=3;
+ function init(){
+  if(st)return st;
+  try{
+   const c=aud();if(c.state==='suspended')return null;
+   const len=c.sampleRate*3,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;
+   for(let i=0;i<len;i++){const w=Math.random()*2-1;l=(l+.04*w)/1.04;d[i]=l*2.2}
+   const src=c.createBufferSource();src.buffer=b;src.loop=true;
+   const flt=c.createBiquadFilter(),g=c.createGain(),lfo=c.createOscillator(),lfoG=c.createGain();
+   flt.type='bandpass';flt.Q.value=1.6;flt.frequency.value=320;
+   lfo.type='sine';lfo.frequency.value=.14;lfoG.gain.value=110;
+   lfo.connect(lfoG);lfoG.connect(flt.frequency);
+   g.gain.value=0.0001;
+   src.connect(flt);flt.connect(g);g.connect(c.destination);
+   src.start();lfo.start();
+   return st={c,g};
+  }catch(e){return null}
+ }
+ function chirp(c){
+  try{
+   const t=c.currentTime,notes=2+Math.floor(Math.random()*2),base=R(2100,3200);
+   for(let i=0;i<notes;i++){
+    const stT=t+i*R(.11,.17),dur=R(.07,.12),o=c.createOscillator(),g=c.createGain();
+    o.type='sine';const f1=base*R(.9,1.15),f2=f1*R(1.15,1.42);
+    o.frequency.setValueAtTime(f1,stT);o.frequency.exponentialRampToValueAtTime(f2,stT+dur*.65);o.frequency.exponentialRampToValueAtTime(f1*.95,stT+dur);
+    g.gain.setValueAtTime(.0005,stT);g.gain.linearRampToValueAtTime(R(.025,.048),stT+.018);g.gain.exponentialRampToValueAtTime(.0005,stT+dur);
+    o.connect(g);g.connect(c.destination);o.start(stT);o.stop(stT+dur+.01);
+   }
+  }catch(e){}
+ }
+ return function(dt,alt){
+  const s=init();if(!s)return;
+  const k=1-CL(alt/40,0,1);
+  s.g.gain.setTargetAtTime(.008+.032*k,s.c.currentTime,.4);
+  if(alt<35&&(birdT-=dt)<=0){birdT=R(5,12);chirp(s.c)}
+ };
+})();
+function spark(x,y,z,n,v=1){for(let i=0;i<n;i++){const p=spt[sI=(sI+1)%SN],a=R(0,6.28),sp=R(3,9)*(.6+v*.5);p.x=x+R(-.1,.1);p.y=y+R(-.1,.1);p.z=z+R(-.1,.1);p.vx=Math.cos(a)*sp;p.vz=Math.sin(a)*sp;p.vy=R(1,5);p.L=p.l=R(.2,.5)}
+ clashL.position.set(x,y,z);clashL.intensity=Math.max(clashL.intensity,2.5*v);
+ }
+function updSparks(dt){for(let i=0;i<SN;i++){const p=spt[i];
+  if(p.l>0){p.l-=dt;p.vy-=14*dt;p.x+=p.vx*dt;p.y=Math.max(.02,p.y+p.vy*dt);p.z+=p.vz*dt;const q=Math.max(0,p.l)/p.L;SPO.position.set(p.x,p.y,p.z);SPO.lookAt(p.x+p.vx,p.y+p.vy,p.z+p.vz);SPO.scale.setScalar(1.5*(.5+q));sparkM.setColorAt(i,SC.setRGB(1,.4+.6*q,.1+.7*q*q).multiplyScalar(q+.2))}else SPO.scale.setScalar(0);
+  SPO.updateMatrix();sparkM.setMatrixAt(i,SPO.matrix)}
+ sparkM.instanceMatrix.needsUpdate=true;sparkM.instanceColor.needsUpdate=true;clashL.intensity*=Math.exp(-16*dt);if(clashL.intensity<.02)clashL.intensity=0}
+function animateHumanoid(m,dt){const u=m.userData;if(!u.root)return;
+ const sp=u.spd||0,t=u.t=(u.t===undefined?R(0,50):u.t)+dt;
+ const hips=u.hips,torso=u.torso,head=u.head,AL=u.ar[0],AR=u.ar[1],EL=u.el[0],ER=u.el[1];
+ // ---- จังหวะก้าว / หายใจ ----
+ u.mv+=((sp>.3?Math.min(1,sp/3):0)-u.mv)*Math.min(1,dt*(u.mvk||12));
+ const mv=u.mv,iw=1-mv,r=CL((sp-5.5)/3.5,0,1),br=Math.sin(t*1.9)*iw;
+ u.ph+=dt*(3+sp*1.2);const S=Math.sin(u.ph),C=Math.cos(u.ph),la=(.5+.35*r)*mv,aa=(.45+.5*r)*mv,gk=u.gk=DMP(u.gk||0,u.gd?1:0,16,dt);
+ // ---- ปฏิกิริยา: โดนตี (กระตุก+กระพริบแดง) / กันด้วยโล่ ----
+ let fl=0,bk=0;
+ if(u.hr>0){u.hr=Math.max(0,u.hr-dt/.45);const q=1-u.hr;fl=u.hr>0?(q<.12?q/.12:Math.pow(1-(q-.12)/.88,2)):0;setFlash(m,u.hr>0&&(u.hr>.88||Math.floor(u.hr*20)%2===0))}else setFlash(m,false);
+ if(u.bk>0){u.bk=Math.max(0,u.bk-dt/.3);bk=u.bk*u.bk}
+ // ---- เดิน/วิ่ง: ต้นขา-เข่า สลับข้าง งอเข่าช่วงเหวี่ยงขา, แขนสลับขา งอศอกตามแกว่ง ----
+ const kb=.5+.9*r;
+ let T0=S*la,T1=-S*la,K0=-(.06+Math.max(0,C)*kb)*mv,K1=-(.06+Math.max(0,-C)*kb)*mv;
+ let lar=-S*aa+.05+Math.sin(t*1.9+.6)*.02*iw,le=.15+(.12+.5*r)*mv+Math.max(0,-S)*(.25+.5*r)*mv;
+ let ar=S*aa*.6+.1,e=.3+(.12+.35*r)*mv+Math.max(0,S)*(.2+.4*r)*mv,ps=.1,tw=0,ty=0,dip=0,stp=0,bal=0,bz=0,sp2=0,rz=0;const a=u.ap;
+ // ---- ต่อสู้: ง้าง-ฟัน-ดึงกลับ (คอมโบ 5 ท่า) / ทหารทั่วไปแทงหอก ----
+ if(a>=0&&u.knight){const K=HK[u.hit||0];let P;
+  if(a<.42){const q=a/.42,z=q*q*q*(q*(6*q-15)+10);P=K[0].map((v,i)=>LP(RDY[i],v,z))}
+  else if(a<.62){const q=(a-.42)/.2,z=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2;P=K[0].map((v,i)=>LP(v,K[1][i],z))}
+  else if(a<.70)P=K[1].slice();
+  else{const q=(a-.70)/.30,z=q*q*(3-2*q);P=K[1].map((v,i)=>LP(v,RDY[i],z))}
+  ar=P[0];e=P[1];ps=P[2];tw=P[3];ty=P[4];rz=P[5];bz=P[6];
+  const pulse=a>.3&&a<.7?Math.sin(Math.PI*(a-.3)/.4):0,sk=a>=.42&&a<.62?Math.sin(Math.PI*(a-.42)/.2):0,hi=u.hit||0;
+  dip=sk*HKDIP[hi];stp=sk*HKSTP[hi];bal=pulse*HK1H[hi];sp2=0}
+ else if(a>=0){if(a<.3){ar=-.9*(a/.3);ps=.1+.4*(a/.3)}else if(a<.55){const q=(a-.3)/.25;ar=-.9+2.35*q;ps=.5-2.07*q}else{const q=(a-.55)/.45;ar=1.45-1.35*q;ps=-1.57+1.67*q}
+  e=.15;tw=-.5*Math.sin(Math.min(1,a/.55)*Math.PI*.9);ty=a<.3?-.22*(a/.3):a<.55?-.22+.8*((a-.3)/.25):.58*(1-(a-.55)/.45)}
+ if(u.knight&&!(a>=0)){if(u.dp>=0){const f=u.dsh?1-u.dp:u.dp;if(f<.35){const q=f/.35;ar=.1+.3*q;rz=-1.15*q;e=.4+.6*q;ps=2.68}else{const q=(f-.35)/.65;ar=.4+.4*q;rz=-1.15+.7*q;e=1-.1*q;ps=2.68-2.98*q}}else if(u.drawn){ar=.8+S*aa*.2;e=.9;ps=-.3;rz=-.45}}
+ 
+ const Q=u.sm||(u.sm={}),ch=(k,v,st,dm)=>{const o=Q[k]||(Q[k]={x:v,v:0});if(dt>0){o.v+=(v-o.x)*st*dt;o.v*=Math.exp(-dm*dt);o.x+=o.v*dt}return o.x};
+ let twH=tw;
+ if(u.knight){ar=ch('a',ar,320,28);e=ch('e',e,320,28);ps=ch('p',ps,240,26);rz=ch('z',rz,260,28);twH=ch('h',tw,420,30);tw=ch('t',tw,260,26);ty=ch('y',ty,260,26);dip=ch('d',dip,300,26);bz=ch('b',bz,260,28)}
+ let th=u.knight?(u.dp>=0?Math.max(0,((u.dsh?1-u.dp:u.dp)-.6)/.4):u.drawn?1:0):0;th=th*th*(3-2*th);
+ // ---- แขนซ้าย: จับด้ามสองมือตอนชักดาบ / ยกโล่ตั้งบังลำตัวตอนการ์ด ----
+ let lx=LP(lar,ar,th),lz=.45*th,lel=LP(le,e,th);lx-=bal*.4;lz+=bal*.9;
+ lx=LP(lx,1.05,gk);lz=LP(lz,.42,gk);lel=LP(lel,2.1,gk);
+ // ---- ลำตัว: สะโพก(hips) → อก(torso) → ศีรษะ ----
+ let hy=.95-.28*la*la*S*S-dip*.14-.14*gk-.03*fl,hx=-twH*.06+Math.sin(t*.37)*.012*iw,hz=-dip*.14+.22*fl+.06*bk,
+  hry=-S*(.1+.08*r)*mv+twH*.45,hrz=C*.04*mv+Math.sin(t*.37)*.02*iw,hrx=-(.03+.1*r)*mv+.15*fl,
+  trx=-(.02+.12*r)*mv+ty-.1*gk+.75*fl+.15*bk,try_=S*(.12+.1*r)*mv+tw-hry-.25*gk+.15*fl,trz=-C*.025*mv,
+  hdx=(.05+.14*r)*mv+Math.sin(t*.41)*.04*iw+.35*fl-.08*gk,hdy=(Math.sin(t*.55)*.22+Math.sin(t*.23+1)*.15)*iw-(hry+try_)*.5;
+ T0+=dip*.55+.65*gk-.45*fl;T1+=-dip*.35+.65*gk+.3*fl;K0+=-dip*.8-1.1*gk-.5*fl;K1+=-dip*.8-1.1*gk-.5*fl;
+ T0+=stp*.5;T1-=stp*.5;lx+=-.9*fl+.1*bk;ar-=.9*fl;
+ // ---- Dodge Roll: หมุน 360° แกน X (ease-in-out) ก้มตัวชิดพื้น + ฝุ่น ----
+ const rl=u.roll===undefined?-1:u.roll;let tk=0,th2=0;
+ if(rl>=0){tk=SS(rl/.14)*(1-SS((rl-.82)/.18));const q=CL((rl-.06)/.86,0,1);th2=Math.PI*2*(q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2);
+  hy=LP(hy,.62,tk);hrx=LP(hrx,-.25,tk);hry*=1-tk;hrz*=1-tk;hx*=1-tk;hz*=1-tk;try_*=1-tk;trz*=1-tk;trx=LP(trx,-1.5,tk);hdx=LP(hdx,-.6,tk);
+  T0=LP(T0,1.7,tk);T1=LP(T1,1.7,tk);K0=LP(K0,-2.1,tk);K1=LP(K1,-2.1,tk);lx=LP(lx,1,tk);lz=LP(lz,.35,tk);lel=LP(lel,1.7,tk);ar=LP(ar,1,tk);e=LP(e,1.7,tk);rz=LP(rz,-.35,tk);
+  const fx=-Math.sin(m.rotation.y),fz=-Math.cos(m.rotation.y),pr=u.rp===undefined?-1:u.rp;u.dd=(u.dd||0)-dt;
+  if(pr<0)dust(m.position.x,m.position.z,10,-fx*3,-fz*3);else if(pr<.9&&rl>=.9)dust(m.position.x,m.position.z,12,fx*2,fz*2);
+  if(u.dd<=0&&(rl<.3||rl>.68)){u.dd=.045;dust(m.position.x,m.position.z,2,-fx,-fz)}}
+ u.rp=rl;u.rolling=rl>=0&&tk>.35;u.sp.visible=!u.rolling&&!(u.noSp&&!u.knight);
+ const RT=u.root;
+ if(rl>=0){const py=.62,pz=-.25,c=Math.cos(-th2),s=Math.sin(-th2);RT.rotation.x=-th2;RT.position.set(0,py-(py*c-pz*s),pz-(py*s+pz*c))}
+ else if(RT.rotation.x||RT.position.y||RT.position.z){RT.rotation.x=0;RT.position.set(0,0,0)}
+ // ---- apply ----
+ hips.position.set(hx,hy,hz);hips.rotation.set(hrx,hry,hrz);
+ torso.position.y=.03+br*.006;torso.rotation.set(trx,try_,trz);torso.scale.set(1+.014*br,1+.02*br,1+.016*br);
+ head.rotation.set(hdx,hdy,0);AL.position.y=AR.position.y=.58+.012*br;
+ AL.rotation.set(lx,0,lz);EL.rotation.x=lel;AR.rotation.set(ar,0,rz);ER.rotation.x=e;u.sp.rotation.x=ps-(ar+e);u.sp.rotation.z=bz;
+ u.lu[0].rotation.set(T0,-hry*.85,0);u.lu[1].rotation.set(T1,-hry*.85,0);u.kn[0].rotation.x=K0;u.kn[1].rotation.x=K1;
+ u.spin=sp2;
+ if(u.shG){const q=u.shG;q.position.set(-.1*gk-.42*Math.sin(Math.PI*gk),.46-.06*gk,.205-.535*gk);q.rotation.y=Math.PI*gk;q.scale.setScalar(1+.22*gk)}
+ if(u.cape){const cp=u.cape,P=cp.geo.attributes.position,B=cp.base,spdK=CL(sp/9,0,1),flyK=(()=>{try{return ridingDragon?CL(Math.abs(airSpd)/21,0,1):0}catch(e){return 0}})(),wind=Math.max(spdK,flyK);
+  cp.lift=DMP(cp.lift,.12+.48*wind+(rl>=0?.45:0),6,dt);
+  for(let i=0;i<P.count;i++){const j=i*3,v=Math.min(1,Math.max(0,-B[j+1]/1.02)),v2=v*v;
+   const wave=Math.sin(t*(4+wind*10)-v*5+B[j]*6)*(.012+.055*wind)*v2;
+   P.array[j]=B[j]+Math.sin(t*2.5-v*3)*.015*v2;
+   P.array[j+1]=B[j+1]+v2*cp.lift*.28;
+   P.array[j+2]=B[j+2]+v2*cp.lift+wave}
+  P.needsUpdate=true;cp.geo.computeVertexNormals()}}
+function anim(m,sp,dt,t){m.userData.spd=sp;animateHumanoid(m,dt)}
+function hitReact(m,blk){const u=m.userData;if(blk)u.bk=1;else u.hr=1}
+function manOld(c,helm,s=1){const g=new THREE.Group(),mc=M(c);
+ box(.6,.8,.35,mc,0,1.15,0,g);
+ const L=box(.22,.75,.25,M(0x2a2420),-.16,.38,0,g),Rg=box(.22,.75,.25,M(0x2a2420),.16,.38,0,g);
+ const h=new THREE.Mesh(new THREE.SphereGeometry(.18,10,8),skin);h.position.y=1.75;h.castShadow=true;g.add(h);
+ if(helm){const o=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8,0,6.28,0,1.7),M(0x777777,.4,{metalness:.6}));o.position.y=1.78;g.add(o)}
+ box(.14,.6,.14,mc,-.4,1.2,0,g);box(.14,.6,.14,mc,.4,1.2,0,g);
+ cyl(.025,.025,2.3,5,wood,.45,1.2,-.15,g);
+ g.userData.legs=[L,Rg];g.scale.setScalar(s);scene.add(g);return g}
+const treeG=new THREE.ConeGeometry(1.6,3.2,7),treeM=M(0x16301c);
+function tree(x,z){const s=R(.8,1.5);const g=new THREE.Group();g.position.set(x,0,z);
+ cyl(.2*s,.3*s,2.5*s,6,wood,0,1.25*s,0,g);
+ [2.6,4.2,5.6].forEach((y,i)=>{const c=new THREE.Mesh(treeG,treeM);c.position.y=y*s;c.scale.setScalar(s*(1.1-i*.25));c.castShadow=true;g.add(c)});
+ scene.add(g);col.push([x,z,.6*s])}
+function bush(x,z){const g=new THREE.Group();g.position.set(x,0,z);for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.IcosahedronGeometry(R(.9,1.3),1),M(0x0f2210));b.position.set(R(-1,1),R(.6,1.1),R(-1,1));b.castShadow=true;g.add(b)}scene.add(g)}
+function torch(x,z,light){cyl(.06,.08,2.4,5,wood,x,1.2,z);const f=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),new THREE.MeshBasicMaterial({color:0xff6a1a}));f.position.set(x,2.55,z);scene.add(f);
+ if(light){const l=new THREE.PointLight(0xff6a22,1.8,24,2);l.position.set(x,2.7,z);scene.add(l);flick.push(l)}}
+const flick=[],chim=[],flags=[];
+
+
+// ---------- LARGE TREES + TALL GRASS (InstancedMesh) ----------
+const FZ1=VZ2+6,FZ2=RZ-92,gU={value:0},gCam={value:new V3()};   // ป่าครอบคลุมทั้งแมป
+const KEEP=[[0,-390,44],[0,-445,44],[0,RZ+45,26],[0,PZ,48],[0,45,16],[38,62,14],[53,149,15],[0,58,22],[0,0,20]];   // 2 จุดท้าย = พื้นที่โล่งรอบจุดเกิดผู้เล่น
+const inKeep=(x,z)=>KEEP.some(k=>(k[0]-x)**2+(k[1]-z)**2<k[2]*k[2]);
+{// ป่ายักษ์ ×2 ครอบคลุมเต็มแมป — สุ่มตำแหน่งด้วย Spatial Hash Grid (เช็กเฉพาะช่องรอบข้าง 3×3 แทนการวนเช็กทุกต้น)
+ const P=[],CS=28,grid=new Map(),gk=(i,j)=>i*100003+j;
+ const XM=360,ZLO=Math.max(FZ2-70,RZ-132),ZHI=VZ2+45;   // X ±360, Z ZLO..VZ2+45 (ZLO ไม่ให้เลยขอบพื้นหญ้าที่ RZ-140)
+ for(let i=0;i<200000&&P.length<1100;i++){
+  const x=R(-XM,XM),z=R(ZLO,ZHI);if(inKeep(x,z))continue;
+  const md=(z<-120&&z>-320)?484:676,ci=Math.floor(x/CS),cj=Math.floor(z/CS);   // dist² 484 = ห่าง 22 (ป่าทึบ) / 676 = ห่าง 26 (ทั่วไป); CS ≥ ระยะห่างสูงสุด 26 เพื่อให้เช็กแค่ช่อง 3×3 ก็ครบ
+  let ok=true;
+  for(let a=ci-1;a<=ci+1&&ok;a++)for(let b=cj-1;b<=cj+1&&ok;b++){const cell=grid.get(gk(a,b));if(cell)for(const p of cell)if((p[0]-x)**2+(p[1]-z)**2<md){ok=false;break}}
+  if(!ok)continue;
+  const t=[x,z,R(2.7,4.3),R(0,6.28)],k=gk(ci,cj);P.push(t);if(grid.has(k))grid.get(k).push(t);else grid.set(k,[t])}
+// ---- เท็กเจอร์เปลือกไม้ / ใบไม้ (CanvasTexture + bumpMap, วาดแบบ tile ได้ ใช้ seed เดียวกันทั้ง map และ bump) ----
+ const rngS=s=>()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
+ const mkTex=(cv,rx,ry,srgb)=>{const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);if(srgb)t.encoding=THREE.sRGBEncoding;return t};
+ const barkTex=bump=>{const W=256,H=256,k=document.createElement('canvas');k.width=W;k.height=H;const x=k.getContext('2d'),r=rngS(7),tone=(v,m)=>bump?`rgb(${m},${m},${m})`:v;
+  x.fillStyle=tone('#2b1d13',90);x.fillRect(0,0,W,H);
+  for(let i=0;i<46;i++){const bx=r()*W,bw=4+r()*9,sh=r(),by=r()*H,bh=70+r()*190;   // สันเปลือกแนวตั้ง
+   const m=bump?(120+sh*110)|0:0,col=bump?`rgb(${m},${m},${m})`:`rgb(${(46+sh*34)|0},${(32+sh*22)|0},${(20+sh*14)|0})`;
+   [-W,0,W].forEach(ox=>{x.fillStyle=col;x.beginPath();x.rect(bx+ox,by,bw,bh);x.rect(bx+ox,by-H,bw,bh);x.rect(bx+ox,by+H,bw,bh);x.fill()})}
+  for(let i=0;i<70;i++){let cx=r()*W,cy=r()*H;const len=20+r()*70;x.lineWidth=1+r()*2.2;x.strokeStyle=bump?'rgb(8,8,8)':'#0c0704';   // ร่อง/รอยแตกหยาบ
+   [-W,0,W].forEach(ox=>{x.beginPath();let px=cx+ox,py=cy;x.moveTo(px,py);for(let s=0;s<len;s+=6){px+=(r()-.5)*5;py+=6;x.lineTo(px,py)}x.stroke()})}
+  if(!bump)for(let i=0;i<26;i++){const mx=r()*W,my=r()*H,mr=8+r()*20;   // คราบตะไคร่/มอสส์เขียวหม่นประปราย
+   [-W,0,W].forEach(ox=>{const g=x.createRadialGradient(mx+ox,my,0,mx+ox,my,mr);g.addColorStop(0,'rgba(78,98,52,.55)');g.addColorStop(1,'rgba(78,98,52,0)');x.fillStyle=g;x.fillRect(mx+ox-mr,my-mr,mr*2,mr*2)})}
+  return mkTex(k,3,2,!bump)};
+ const leafTex=bump=>{const S=256,k=document.createElement('canvas');k.width=k.height=S;const x=k.getContext('2d'),r=rngS(21);
+  x.fillStyle=bump?'rgb(20,20,20)':'#0f1a0b';x.fillRect(0,0,S,S);   // พื้นเข้ม = ช่องว่างเงาลึกในพุ่ม
+  const tones=[['#1d3315',70],['#2e4d1f',130],['#4c6e2e',200]];   // ใบเข้ม / กลาง / ปลายใบสว่าง
+  for(let l=0;l<3;l++)for(let i=0;i<(l===0?260:l===1?240:170);i++){const lx=r()*S,ly=r()*S,a=r()*6.28,w=3+r()*3.5,h=8+r()*7,m=tones[l][1];
+   x.fillStyle=bump?`rgb(${m},${m},${m})`:tones[l][0];
+   [-S,0,S].forEach(ox=>[-S,0,S].forEach(oy=>{x.save();x.translate(lx+ox,ly+oy);x.rotate(a);x.beginPath();x.ellipse(0,0,w,h,0,0,6.283);x.fill();x.restore()}))}
+  return mkTex(k,2,2,!bump)};
+ const mergeG=gs=>{const P=[],N=[],U=[];gs.forEach(g=>{const n=g.index?g.toNonIndexed():g;for(const v of n.attributes.position.array)P.push(v);for(const v of n.attributes.normal.array)N.push(v);for(const v of n.attributes.uv.array)U.push(v)});
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.Float32BufferAttribute(P,3));m.setAttribute('normal',new THREE.Float32BufferAttribute(N,3));m.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));return m};
+ // ลำต้น: โคนแผ่เป็นรากค้ำยัน + กิ่งหลัก 3 กิ่งยื่นเฉียงขึ้นไปรับพุ่มใบ (รวมเป็น geometry เดียว → InstancedMesh เดียว)
+ const BR=[[.5,.85,3.2],[2.6,.8,3.0],[4.5,.95,2.6]],tip=([a,t,L])=>[L*Math.sin(t)*Math.cos(a),3.4+L*Math.cos(t),-L*Math.sin(t)*Math.sin(a)];
+ const trunk=new THREE.CylinderGeometry(.36,.78,4.4,9);trunk.translate(0,2.2,0);
+ const g1=mergeG([trunk,...BR.map(([a,t,L])=>{const q=new THREE.CylinderGeometry(.1,.24,L,6);q.translate(0,L/2,0);q.rotateZ(-t);q.rotateY(a);q.translate(0,3.4,0);return q})]);
+ // พุ่มใบ 4 ชั้น: ฐานกว้าง / กลางซ้าย / กลางขวา (ตามปลายกิ่ง) / ยอด
+ const gA=new THREE.IcosahedronGeometry(3.4,1);gA.scale(1.25,.85,1.25);gA.translate(0,5.4,0);
+ const t0=tip(BR[0]),t1=tip(BR[1]);
+ const gB=new THREE.IcosahedronGeometry(2.5,1);gB.scale(1,.8,1);gB.translate(t0[0],t0[1]+.9,t0[2]);
+ const gC=new THREE.IcosahedronGeometry(2.3,1);gC.scale(1,.8,1);gC.translate(t1[0],t1[1]+.8,t1[2]);
+ const gD=new THREE.IcosahedronGeometry(2.5,1);gD.translate(.4,8.5,.3);
+ const bk=barkTex(false),bkB=barkTex(true),lf=leafTex(false),lfB=leafTex(true);
+ const darkBark=M(0xffffff,.95,{map:bk,bumpMap:bkB,bumpScale:1.8});
+ const leaf=M(0xffffff,.95,{map:lf,bumpMap:lfB,bumpScale:1.4,flatShading:false,metalness:0});
+ const ms=[new THREE.InstancedMesh(g1,darkBark,P.length),...[gA,gB,gC,gD].map(g=>new THREE.InstancedMesh(g,leaf,P.length))];
+ const o=new THREE.Object3D(),c=new THREE.Color();
+ const LC=[()=>c.setHSL(R(.30,.36),R(.30,.45),R(.07,.11)),()=>c.setHSL(R(.24,.30),R(.35,.50),R(.11,.17)),()=>c.setHSL(R(.24,.30),R(.35,.50),R(.11,.17)),()=>c.setHSL(R(.16,.21),R(.30,.42),R(.11,.16))];   // เขียวเข้ม / เขียวมอสส์ / เขียวอมน้ำตาล
+ P.forEach(([x,z,s,r],i)=>{o.position.set(x,0,z);o.rotation.y=r;o.scale.setScalar(s);o.updateMatrix();
+  ms.forEach(m=>m.setMatrixAt(i,o.matrix));for(let l=1;l<5;l++){LC[l-1]();ms[l].setColorAt(i,c)}col.push([x,z,.55*s])});
+ ms[0].castShadow=true;ms[0].receiveShadow=true;      // ลำตัน+กิ่ง: เกิดเงา + รับเงา
+ ms[1].castShadow=true;ms[1].receiveShadow=false;     // พุ่มฐาน: เกิดเงา ไม่รับเงา
+ ms[2].castShadow=false;ms[2].receiveShadow=false;ms[3].castShadow=false;ms[3].receiveShadow=false;ms[4].castShadow=false;ms[4].receiveShadow=false;   // พุ่มชั้นบน: ไม่เกิด/ไม่รับเงา (ลดภาระ shadow map)
+ ms.forEach(m=>{m.frustumCulled=false;scene.add(m)})}
+{const gp=[],gc=[],gi=[];[0,1.047,2.094].forEach((a,k)=>{const c=Math.cos(a),s=Math.sin(a),b=k*4;
+  gp.push(-.32*c,0,-.32*s,.32*c,0,.32*s,.07*c,.75,.07*s,-.07*c,.75,-.07*s);
+  gc.push(.08,.15,.05,.08,.15,.05,.3,.45,.16,.3,.45,.16);gi.push(b,b+1,b+2,b,b+2,b+3)});
+ const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(gp,3));ge.setAttribute('color',new THREE.Float32BufferAttribute(gc,3));
+ ge.setAttribute('normal',new THREE.Float32BufferAttribute(gp.map((v,i)=>i%3===1?1:0),3));ge.setIndex(gi);
+ const gm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
+ gm.onBeforeCompile=sh=>{sh.uniforms.uT=gU;sh.uniforms.uCam=gCam;sh.vertexShader='uniform float uT;\nuniform vec3 uCam;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvec3 ip=vec3(instanceMatrix[3]);float w=sin(uT*1.7+ip.x*.21+ip.z*.17)+.4*sin(uT*3.1+ip.z*.45);float hh=position.y*position.y;transformed.x+=w*.22*hh;transformed.z+=w*.1*hh;float dist=distance(ip.xz,uCam.xz);transformed*=1.0-smoothstep(85.0,115.0,dist);')};   // Distance culling: ไกลเกิน 115 ย่อสเกลเป็น 0
+ const G=[];for(let p=0;p<1400;p++){const cx=R(-360,360),cz=R(Math.max(FZ2-70,RZ-132),VZ2+45);if(inKeep(cx,cz))continue;const rr=R(6,13),n=Math.round(rr*rr*1.4);
+  for(let i=0;i<n;i++){const a=R(0,6.28),d=rr*Math.sqrt(Math.random()),x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d;if(Math.abs(x)>365||z>VZ2+50||z<RZ-130||inKeep(x,z))continue;G.push([x,z])}}
+ const gmesh=new THREE.InstancedMesh(ge,gm,G.length),o=new THREE.Object3D(),c=new THREE.Color();
+ G.forEach(([x,z],i)=>{const s=R(.7,1.15);o.position.set(x,0,z);o.rotation.y=R(0,6.28);o.scale.set(R(.9,1.4),s,R(.9,1.4));o.updateMatrix();gmesh.setMatrixAt(i,o.matrix);c.setScalar(R(.75,1.1));gmesh.setColorAt(i,c)});
+ gmesh.frustumCulled=false;scene.add(gmesh)}
+
+// ---------- FOREST DECOR: rocks / bushes ----------
+const obs=[],flames2=[];
+function ob(x,z,r){col.push([x,z,r]);obs.push([x,z,r+.4])}
+function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stone);o.position.set(x,s*.55,z);o.scale.y=.75;o.rotation.set(R(0,3),R(0,3),0);o.castShadow=o.receiveShadow=true;scene.add(o);col.push([x,z,s])}
+
+// ---------- player ----------
+let me=man(0x2c4a7a,false,1,false,false);me.userData.noSp=true;   // ตัวละครธรรมดา ไม่มีเกราะ/อาวุธ
+let px=0,pz=58,yaw=Math.PI,pitch=-.05,mode=1,camT=1;
+const keys={};
+addEventListener('keydown',e=>{if(e.ctrlKey&&e.code==='KeyR'&&ridingDragon)e.preventDefault();keys[e.code]=true;if(e.code==='KeyV')mode=1-mode});
+addEventListener('blur',()=>{keys.ControlLeft=false;keys.KeyR=false;if(typeof flySpr!=='undefined')flySpr=false});
+addEventListener('keyup',e=>{keys[e.code]=false});
+const BTN=document.getElementById('btn'),_eye=new V3();BTN.addEventListener('click',()=>mode=1-mode);
+let drag=false;const cv=renderer.domElement;
+cv.addEventListener('mousedown',()=>{drag=true;if(!ridingDragon)try{cv.requestPointerLock()}catch(e){}});
+addEventListener('mouseup',()=>{drag=false});cv.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mousemove',e=>{if(drag||document.pointerLockElement){
+ yaw-=e.movementX*.0025;pitch=Math.max(-1.2,Math.min(1.2,pitch-e.movementY*.0025))}});
+let tl=null,tr=null;
+const joy=document.getElementById('joy'),knob=document.getElementById('knob');
+function moveKnob(t){let dx=t.clientX-tl.x,dy=t.clientY-tl.y;const l=Math.hypot(dx,dy);if(l>50){dx*=50/l;dy*=50/l}tl.dx=dx;tl.dy=dy;knob.style.transform=`translate(${dx}px,${dy}px)`}
+let pkx=0,pkz=0,dashCd=0,dashT=0,torchOn=false;
+const pl=new THREE.PointLight(0xffa850,0,22,2);scene.add(pl);
+const $=id=>document.getElementById(id);
+function attack(){if(ridingDragon)isBreathingFire=true;else if(ridingWyvern)wyvSlamStart()}
+const ROLL=.6;
+function dash(){if(dashCd>0||dashT>0||lock||ridingDragon||ridingWyvern)return;dashCd=2.8;dashT=ROLL;playerSfx.roll()}
+function torchT(){torchOn=!torchOn}
+$('atk').addEventListener('pointerdown',e=>{e.preventDefault();attack()});
+$('dashBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();dash()});$('dashBtn').addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+addEventListener('keydown',e=>{if((e.code==='Space'&&!ridingDragon)||e.code==='KeyJ')attack();if(e.code==='KeyG'&&ridingDragon)dismountDragon();if(e.code==='KeyG'&&ridingWyvern)dismountWyvern();if(e.code==='KeyQ')dash();if(e.code==='KeyF')torchT();});
+const purge=e=>{const ids=[...e.touches].map(t=>t.identifier);if(tl&&!ids.includes(tl.id)){tl=null;knob.style.transform='none'}if(tr&&!ids.includes(tr.id))tr=null};
+addEventListener('touchstart',e=>{purge(e);for(const t of e.changedTouches){if(t.target.tagName==='BUTTON')continue;
+ const jr=joy.getBoundingClientRect(),inJoy=t.clientX>jr.left-20&&t.clientX<jr.right+20&&t.clientY>jr.top-20&&t.clientY<jr.bottom+20;
+ if(inJoy&&!tl){tl={id:t.identifier,x:jr.left+jr.width/2,y:jr.top+jr.height/2,dx:0,dy:0};moveKnob(t)}else if(!inJoy&&!tr)tr={id:t.identifier,x:t.clientX,y:t.clientY}}},{passive:true});
+addEventListener('touchmove',e=>{for(const t of e.changedTouches){
+ if(tl&&t.identifier===tl.id)moveKnob(t)
+ else if(tr&&t.identifier===tr.id){
+  yaw-=(t.clientX-tr.x)*.005;pitch=Math.max(-1.2,Math.min(1.2,pitch-(t.clientY-tr.y)*.005));
+  tr.x=t.clientX;tr.y=t.clientY}}},{passive:true});
+addEventListener('touchend',purge);addEventListener('touchcancel',purge);addEventListener('blur',()=>{tl=null;tr=null;knob.style.transform='none'});
+function blocked(x,z,y=0){if(Math.abs(x)>370||z>VZ2+55||z<RZ-125)return true;   // ขอบแผนที่ (ตรงกับพื้นหญ้าจริง)
+ if(y>14)return false;                      // บินสูงเกิน 14: ข้ามการชนวัตถุพื้นดิน เช็กเฉพาะขอบแผนที่
+ for(const c of col){const dx=x-c[0],dz=z-c[1],d2=dx*dx+dz*dz;if(d2>400)continue;const r=c[2]+.4;if(d2<r*r)return true}return false}
+function legs(m,moving,t){const s=moving?Math.sin(t*9)*.6:0;m.userData.legs[0].rotation.x=s;m.userData.legs[1].rotation.x=-s}
+
+// ---------- loop ----------
+let lock=false,ambT=0,shk=0;
+const SH=$('shout'),DB=$('dismountBtn'),coarse=matchMedia('(pointer:coarse)').matches;
+function shout(t,ms=2000){SH.textContent=t;SH.style.opacity=1;clearTimeout(shout.h);shout.h=setTimeout(()=>SH.style.opacity=0,ms)}
+// ลงจากมังกร: G (คีย์บอร์ด) หรือปุ่ม ⬇️ (มือถือ) · ขึ้นขี่: ปุ่ม #dragonE ลอยตามตัวมังกร กดค้าง ~0.55 วิ (เมาส์/สัมผัส/คีย์ E)
+DB.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();ridingWyvern?dismountWyvern():dismountDragon()});
+DB.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});DB.addEventListener('touchend',e=>e.stopPropagation(),{passive:true});
+const dragonE=$('dragonE'),_dv=new V3();let holdMount=0,isHoldingE=false;
+dragonE.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{dragonE.setPointerCapture(e.pointerId)}catch(_){}isHoldingE=true});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])dragonE.addEventListener(ev,()=>{isHoldingE=false});
+dragonE.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});dragonE.addEventListener('touchend',e=>e.stopPropagation(),{passive:true});
+dragonE.addEventListener('contextmenu',e=>e.preventDefault());
+// ---------- SECRET DRAGON MOUNT (คอกม้าลับ) ----------
+let dragonUnlocked=false,ridingDragon=false,dragonYaw=0,flyY=0,fireCd=0,fireBurst=0,flyVy=0,dragPitch=0,airSpd=0,velYaw=0,dragBank=0;const _sd=new V3(),_se=new THREE.Euler();   // flyVy: ความเร็วแนวดิ่ง / dragPitch: มุมก้ม-เงยลำตัว (+ = เชิดหัวขึ้น)
+const DRAGON_POS=[58,146];
+let fireMesh=null;
+
+// โมเดลมังกร (หันหน้าไปทาง -Z ให้ตรงกับ rotation.y = yaw; ตัวละครขี่ตรงหลังราวความสูง 2.6)
+const dragonG=new THREE.Group();scene.add(dragonG);dragonG.position.set(DRAGON_POS[0],0,DRAGON_POS[1]);dragonG.visible=false;dragonG.rotation.order='YXZ';
+// ลำตัว 2 ท่อน: dChest (อก/ไหล่/ปีก/ขาหน้า/คอ) + dPelvis (สะโพก/ขาหลัง/หาง) มีข้อต่อกลางหลัง / dSaddle = อาน+สายรัด (ผู้เล่นนั่งอิงกลุ่มนี้)
+const dChest=new THREE.Group(),dPelvis=new THREE.Group(),dSaddle=new THREE.Group();dChest.position.set(0,1.55,0);dPelvis.position.set(0,1.55,.3);dSaddle.position.set(0,1.55,0);dragonG.add(dChest,dPelvis,dSaddle);
+// ---------- พื้นผิวเกล็ดมังกร (CanvasTexture ลายเกล็ดซ้อนทับ ใช้เป็นทั้ง map และ bumpMap) ----------
+function scaleTex(c0,c1,bump,rep){const S=256,cv=document.createElement('canvas');cv.width=cv.height=S;const g=cv.getContext('2d'),r=16,dy=S/18;
+ g.fillStyle=bump?'#303030':c0;g.fillRect(0,0,S,S);
+ for(let y=-1;y<19;y++)for(let x=-1;x<9;x++){const cx=x*2*r+(y&1?r:0),cy=y*dy+r*.5,gr=g.createRadialGradient(cx,cy-r*.4,1,cx,cy,r*1.15);
+  gr.addColorStop(0,bump?'#fff':c1);gr.addColorStop(1,bump?'#505050':c0);g.fillStyle=gr;
+  g.beginPath();g.moveTo(cx-r,cy-r);g.lineTo(cx-r,cy);g.arc(cx,cy,r,Math.PI,0,true);g.lineTo(cx+r,cy-r);g.closePath();g.fill();
+  g.strokeStyle=bump?'#000':'#0a0504';g.lineWidth=1.6;g.beginPath();g.arc(cx,cy,r,0,Math.PI);g.stroke()}
+ const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);if(!bump){if(THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;else t.encoding=THREE.sRGBEncoding}return t}
+// พังผืดปีก: พื้นแดงเข้ม + เส้นเลือดแตกแขนงจากโคนปีก (UV = พิกัด x,y ของ Shape: x 0..8, y -0.4..2.4)
+function wingTex(){const S=256,cv=document.createElement('canvas');cv.width=cv.height=S;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,S,0);
+ gr.addColorStop(0,'#601616');gr.addColorStop(1,'#2a0808');g.fillStyle=gr;g.fillRect(0,0,S,S);g.lineCap='round';
+ for(let i=0;i<14;i++){const ey=S*(.04+.9*i/13);g.strokeStyle=i%3?'#a02020':'#d03a3a';g.lineWidth=i%3?1.3:2.4;g.beginPath();g.moveTo(0,S*.75);g.quadraticCurveTo(S*.5,(S*.75+ey)/2+(i%2?8:-8),S*.97,ey);g.stroke()}
+ const t=new THREE.CanvasTexture(cv);t.repeat.set(1/8,1/2.8);t.offset.set(0,.4/2.8);if(THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;else t.encoding=THREE.sRGBEncoding;return t}
+const sMat=(c0,c1,rep,ro,me)=>new THREE.MeshStandardMaterial({color:0xffffff,map:scaleTex(c0,c1,0,rep),bumpMap:scaleTex(c0,c1,1,rep),bumpScale:1.6,roughness:ro,metalness:me});
+const DSC=sMat('#2a1310','#5a2418',3,.5,.25),DSC2=sMat('#3a1810','#702c1c',2,.55,.25),DGD=sMat('#7a5e34','#c9a45c',2,.45,.55),
+ DHN=M(0x120c08,.45,{metalness:.3}),DCL=M(0x050505,.22,{metalness:.5}),DTH=M(0xe8e0c8,.4),DLT=M(0x4a2c18,.8),DIR=M(0x5a5e66,.4,{metalness:.8}),DTG=M(0x8a2a3a,.6),
+ DEY=M(0xffaa20,.3,{emissive:0xff5500,emissiveIntensity:1.6}),DNS=M(0xff6a20,.3,{emissive:0xff4400,emissiveIntensity:1.2}),
+ wTex=wingTex(),DWM=new THREE.MeshStandardMaterial({color:0xffffff,map:wTex,emissive:0x5a0c0c,emissiveMap:wTex,emissiveIntensity:.35,roughness:.65,metalness:.05,side:THREE.DoubleSide,transparent:true,opacity:.9});
+const SPH=new THREE.SphereGeometry(1,14,10),CONE=new THREE.ConeGeometry(1,1,6),UPV=new THREE.Vector3(0,1,0);
+const mk=(geo,mat,p,x=0,y=0,z=0,sc=[1,1,1],rot=[0,0,0])=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.scale.set(sc[0],sc[1],sc[2]);o.rotation.set(rot[0],rot[1],rot[2]);o.castShadow=false;p.add(o);return o};
+// แท่งเรียวจากจุด A ไป B (ใช้ทำเขา/กระดูกปีก/ขา/บังเหียน)
+function limb(p,mat,A,B,r0,r1,seg=7){const a=new V3(...A),d=new V3(...B).sub(a),L=d.length(),m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,L,seg),mat);
+ m.position.copy(a).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(UPV,d.normalize());m.castShadow=false;p.add(m);return m}
+// ปล้องต่อกัน: แต่ละปล้องเป็น pivot ลูกของปล้องก่อน ทำให้คลื่นไหลต่อเนื่อง (dir=+1 หาง, -1 คอ) + ครีบใบมีดเรียวตามลำดับ
+function chain(root,dir,radii,lens,mat,spk){
+ const J=[];let parent=root;
+ for(let i=0;i<lens.length;i++){
+  const piv=new THREE.Group();piv.position.z=i?dir*lens[i-1]:0;parent.add(piv);
+  const r0=radii[i],r1=radii[i+1],L=lens[i];
+  mk(SPH,mat,piv,0,0,0,[r0,r0,r0]);   // ทรงกลมข้อต่อ: ปิดรอยหักมุมเวลาคอ/หางโค้งงอ
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,L,10),mat);m.rotation.x=dir>0?Math.PI/2:-Math.PI/2;m.position.z=dir*L/2;m.castShadow=false;piv.add(m);
+  mk(CONE,spk,piv,0,r0*.9+.12,dir*L*.5,[.05,.3+.45*(1-i/lens.length),.3],[dir*-.25,0,0]);   // ครีบใบมีดบนสันหลัง
+  J.push(piv);parent=piv}
+ return J}
+// ---------- ลำตัว 2 ท่อนซ้อนเหลื่อมที่เอว: LatheGeometry อกกว้างผายออก เรียวรับเอว-สะโพก (โปรไฟล์ BP เดิม) ----------
+const BP=[[0,-2.1],[.48,-1.95],[.88,-1.6],[1.10,-1.05],[1.06,-.4],[.84,.45],[.75,1.15],[.87,1.95],[.80,2.7],[.54,3.25],[0,3.55]];   // เพรียว: อกผาย-เอวคอด-สะโพกกระชับ
+const rAt=z=>{for(let i=1;i<BP.length;i++)if(z<=BP[i][1]){const a=BP[i-1],b=BP[i];return a[0]+(b[0]-a[0])*(z-a[1])/(b[1]-a[1])}return .5};
+{const pts=new THREE.SplineCurve(BP.map(([r,z])=>new THREE.Vector2(r,z))).getPoints(40);
+ const at=z=>{for(let i=1;i<pts.length;i++){const p=pts[i-1],q=pts[i];if(p.y!==q.y&&(p.y-z)*(q.y-z)<=0){const t=(z-p.y)/(q.y-p.y);return new THREE.Vector2(p.x+(q.x-p.x)*t,z)}}return pts[pts.length-1].clone()};
+ const part=(lo,hi)=>{const o=[];if(isFinite(lo))o.push(at(lo));for(const q of pts)if(q.y>lo&&q.y<hi)o.push(q.clone());if(isFinite(hi))o.push(at(hi));return o};   // ตัดโปรไฟล์ช่วง z=lo..hi (ปลายเปิดตรงรอยต่อ ซ่อนอยู่ในอีกท่อน)
+ const lg=ps=>{const g=new THREE.LatheGeometry(ps,20);g.rotateX(Math.PI/2);const P=g.attributes.position,U=g.attributes.uv;for(let i=0;i<P.count;i++)U.setY(i,(P.getZ(i)+2.1)/5.65);return g};   // UV ต่อเนื่องตามแกน z ลายเกล็ดไม่ขาดตรงรอยต่อ
+ const mc=new THREE.Mesh(lg(part(-Infinity,.6)),DSC);mc.scale.y=.92;mc.castShadow=false;dChest.add(mc);               // ท่อนหน้า z=-2..0.6
+ const mp=new THREE.Mesh(lg(part(-.1,Infinity)),DSC);mp.position.z=-.3;mp.scale.set(.985,.92*.985,1);mp.castShadow=false;dPelvis.add(mp);   // ท่อนหลัง z=-0.1..3.55 (เล็กกว่า 1.5% กัน z-fighting ช่วงซ้อน)
+ mk(SPH,DSC,dragonG,0,1.55,.2,[.78,.78*.92,.46]);}   // ทรงกลมข้อต่อกล้ามเนื้อ z=0.2 กันช่องว่างตอนลำตัวงอ
+mk(SPH,DSC2,dChest,0,-.04,-1.45,[.88,.80,.76]);                                  // กล้ามเนื้ออก
+for(const s of [-1,1]){mk(SPH,DSC,dChest,s*.82,.50,-.1,[.44,.48,.68]);mk(SPH,DSC,dPelvis,s*.74,-.04,1.7,[.48,.54,.74])}   // ไหล่ปีก / สะโพก
+for(let i=0;i<11;i++){const z=-1.5+i*.42,r=rAt(z),g=z<.3?dChest:dPelvis;mk(SPH,DGD,g,0,-r*.92*.92,z-(z<.3?0:.3),[r*.62,.1,.26])}               // แผ่นเกราะท้องเป็นปล้อง
+for(let i=0;i<9;i++){const z=-1.4+i*.5;if(Math.abs(z)<.8)continue;const g=z<.3?dChest:dPelvis;mk(CONE,DHN,g,0,rAt(z)*.92*.98,z-(z<.3?0:.3),[.05,.5-i*.02,.3],[.25,0,0])}   // ครีบสันหลัง
+// ---------- อานหนัง/เหล็ก + สายรัดอก (dSaddle: ที่นั่ง y=2.62 โลก = 1.07 ในกลุ่ม) ----------
+mk(SPH,DLT,dSaddle,0,.94,0,[.48,.11,.78]);mk(SPH,DLT,dSaddle,0,1.14,.7,[.42,.22,.12]);mk(CONE,DIR,dSaddle,0,1.22,-.7,[.1,.26,.1]);
+{const gt=new THREE.Mesh(new THREE.TorusGeometry(1.08,.05,6,24),DLT);gt.position.set(0,0,-.25);gt.scale.y=.92;gt.castShadow=false;dSaddle.add(gt)}
+for(const s of [-1,1]){limb(dSaddle,DLT,[s*.5,.92,0],[s*1.08,.22,.05],.03,.03,4);mk(SPH,DIR,dSaddle,s*1.08,.2,.05,[.12,.04,.16]);mk(SPH,DIR,dSaddle,s*1.08,.07,-.25,[.1,.1,.06])}
+// ---------- หาง 9 ปล้อง เรียวเล็ก ปลายเป็นใบหอกแฉก ----------
+const dTailRoot=new THREE.Group();dTailRoot.position.set(0,-.3,1.9);dPelvis.add(dTailRoot);
+const dTailJ=chain(dTailRoot,1,[.7,.64,.58,.52,.45,.38,.3,.22,.14,.06],[1,1,.95,.95,.9,.85,.85,.8,.75],DSC,DHN);
+mk(CONE,DHN,dTailJ[8],0,0,.95,[.34,.95,.07],[Math.PI/2,0,0]);
+for(const s of [-1,1])mk(CONE,DHN,dTailJ[8],s*.14,0,.55,[.1,.5,.05],[1.1,0,-s*.5]);
+// ---------- คอ 6 ปล้อง ----------
+const dNeckRoot=new THREE.Group();dNeckRoot.position.set(0,.35,-1.5);dChest.add(dNeckRoot);
+const dNeckJ=chain(dNeckRoot,-1,[.7,.64,.58,.52,.47,.42,.38],[.6,.58,.55,.52,.5,.48],DSC2,DHN);
+const BASE_NECK=[.22,.16,.06,-.04,-.14,-.18];   // โปรไฟล์คอทรง S-Curve: โคนเชิดสง่า ปลายงุ้มลงรับหัว
+// ---------- หัว: กะโหลกสามเหลี่ยมเรียวยาว สันคิ้วหนา ตาเรืองม่านตาแนวตั้ง ----------
+const dHead=new THREE.Group();dHead.position.set(0,0,-.5);dNeckJ[5].add(dHead);
+mk(SPH,DSC,dHead,0,0,-.3,[.58,.5,.8]);
+mk(new THREE.CylinderGeometry(.2,.5,1.5,4),DSC,dHead,0,-.05,-1.25,[1,1,.62],[-Math.PI/2,0,0]);   // จมูก/ปากบนทรงลิ่ม
+for(const s of [-1,1]){
+ mk(SPH,DHN,dHead,s*.34,.38,-.55,[.26,.1,.5],[0,s*.12,s*.4]);                  // สันคิ้ว
+ mk(SPH,DEY,dHead,s*.4,.22,-.62,[.1,.1,.14]);mk(SPH,DHN,dHead,s*.49,.22,-.62,[.012,.085,.03]);   // ตา + ม่านตาแนวตั้ง
+ mk(SPH,DNS,dHead,s*.09,.03,-1.96,[.05,.05,.05]);                              // รูจมูก
+ // เขาหลักโค้งบิดเกลียวไปด้านหลัง
+ const hp=[];for(let i=0;i<8;i++){const t=i/7,h=.06*(1-t);hp.push([s*(.28+.7*t)+h*Math.sin(t*9),.42+.35*t+.6*t*t+h*Math.cos(t*9),.05+1.5*t])}
+ for(let i=0;i<7;i++)limb(dHead,DHN,hp[i],hp[i+1],.13*(1-i/7)+.02,.13*(1-(i+1)/7)+.02,6);
+ for(let k=0;k<3;k++)mk(CONE,DHN,dHead,s*(.5-.02*k),-.02-.05*k,-.15-k*.3,[.07,.4-.08*k,.07],[.5,0,-s*1.2]);   // หนามข้างแก้ม
+ for(let k=0;k<4;k++)mk(CONE,DHN,dHead,s*.3,.25,.3+k*.12,[.04,.75-.1*k,.3],[0,0,-s*(.7+k*.25)]);              // แผงครีบหลังหัว
+}
+for(let k=0;k<4;k++)mk(CONE,DHN,dHead,0,.48-.03*k,-.9+k*.3,[.04,.3,.16]);                                       // สันกลางหัว
+// ---------- กรามล่างแยกชิ้น + ลิ้น + เขี้ยวใหญ่-เล็กสลับกัน ----------
+const dJaw=new THREE.Group();dJaw.position.set(0,-.22,-.45);dHead.add(dJaw);
+mk(new THREE.CylinderGeometry(.14,.4,1.45,4),DSC2,dJaw,0,-.06,-.82,[1,1,.5],[-Math.PI/2,0,0]);
+mk(SPH,DGD,dJaw,0,-.2,-.5,[.3,.06,.6]);mk(SPH,DTG,dJaw,0,0,-.75,[.13,.04,.62]);
+for(const s of [-1,1])mk(CONE,DHN,dJaw,s*.28,-.1,-.2,[.05,.3,.05],[.8,0,-s*.7]);
+for(let i=0;i<9;i++)for(const s of [-1,1]){const z=-.72-i*.13,w=.5-(-z-.5)/1.5*.28,big=i%2===0;
+ mk(CONE,DTH,dHead,s*w*.82,-.05-w*.5,z,[.04,big?.22:.1,.04],[Math.PI,0,0]);                          // เขี้ยวบน (ชี้ลง)
+ mk(CONE,DTH,dJaw,s*w*.82,-.06+w*.3,z+.45,[.04,big?.1:.22,.04])}                                      // เขี้ยวล่าง (ชี้ขึ้น)
+const dGlow=mk(SPH,new THREE.MeshBasicMaterial({color:0xff7a20,transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),dHead,0,-.12,-.75,[.3,.14,.5]);   // แสงเรืองในลำคอ
+// บังเหียน: สายคาดจมูก/หัว + สายจูงจากหัวอานถึงแก้ม (คำนวณจากท่าพักของคอ)
+mk(new THREE.TorusGeometry(.4,.02,5,12),DLT,dHead,0,-.05,-1.25,[.95,.6,1]);mk(new THREE.TorusGeometry(.56,.02,5,14),DLT,dHead,0,0,-.5,[1,.9,1]);
+dNeckJ.forEach((j,i)=>j.rotation.x=BASE_NECK[i]);dragonG.updateMatrixWorld(true);
+// ---------- สายบังเหียน (dReins): เชือกหนังจำลองฟิสิกส์ Verlet 9 จุด หย่อนโค้ง/แกว่งตามแรงโน้มถ่วง-แรงเฉื่อย-แรงลม ----------
+// ปลายฝั่งหัว = แก้มมังกร (dHead) / ปลายอีกข้าง = มือผู้เล่น (ตอนขี่) หรือคล้องพักที่หัวอาน dSaddle (ตอนไม่ขี่) · อัปเดตด้วย updReins(dt) ใน frame หลังวางผู้เล่นบนอานแล้ว
+const RN=9,RR=4,REIN_R=.022,REIN_MAT=DLT.clone();REIN_MAT.side=THREE.DoubleSide;
+const REIN_L0=(()=>{const c=new V3(.4,-.02,-1.2);dHead.localToWorld(c);dSaddle.worldToLocal(c);return Math.max(1,c.distanceTo(new V3(.12,1.17,-.73))*1.22)})();   // ความยาวสาย = ระยะท่าพัก + หย่อน ~22%
+const dReins=[-1,1].map(s=>{
+ const idx=[];for(let i=0;i<RN-1;i++)for(let j=0;j<RR;j++){const a=i*RR+j,b=i*RR+(j+1)%RR,c=a+RR,d=b+RR;idx.push(a,c,b,b,c,d)}
+ const pos=new Float32Array(RN*RR*3),nor=new Float32Array(RN*RR*3),g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setIndex(idx);
+ const m=new THREE.Mesh(g,REIN_MAT);m.frustumCulled=false;m.castShadow=false;m.visible=false;scene.add(m);
+ return {s,g,m,pos,nor,pts:Array.from({length:RN},()=>new V3()),prv:Array.from({length:RN},()=>new V3()),init:false}});
+const _rA=new V3(),_rB=new V3(),_rBk=new V3(),_rRt=new V3(),_rT=new V3(),_rN=new V3(),_rBn=new V3(),_rU=new V3(0,1,0),_rD=new V3();
+function updReins(dt){
+ if(!dragonUnlocked||!dragonG.visible){for(const r of dReins)r.m.visible=false;return}
+ if(dt<=0)return;
+ const held=ridingDragon&&!mountAnim;
+ if(held)me.updateMatrixWorld(true);else dragonG.updateMatrixWorld(true);   // ขี่: dragon อัปเดตแล้วใน frame / ไม่ขี่: เพิ่งขยับใน syncDragon
+ const h=Math.min(dt,.033),spdK=CL(Math.abs(airSpd)/21,0,1);
+ _rBk.set(0,0,1).transformDirection(dragonG.matrixWorld);_rRt.set(1,0,0).transformDirection(dragonG.matrixWorld);   // ทิศหลัง / ขวาของลำตัวมังกร
+ const flyAmt=ridingDragon?1-wingFold:0;
+ for(const r of dReins){
+  const P=r.pts,V=r.prv,s=r.s;
+  _rA.set(s*.4,-.02,-1.2);dHead.localToWorld(_rA);                                          // ปลายหัว: แก้มมังกร (ขยับตามหัวหัน/ก้ม/พ่นไฟ)
+  if(held)me.userData.el[s<0?0:1].localToWorld(_rB.set(0,-.34,0));                          // มีคนขี่: กำที่มือซ้าย-ขวาของผู้เล่น (ปลายแขนท่อนล่าง)
+  else dSaddle.localToWorld(_rB.set(s*.12,1.19,-.7));                                      // ไม่มีคนขี่: คล้องพักที่หัวอาน
+  if(!r.init||P[0].distanceToSquared(_rA)>36||P[RN-1].distanceToSquared(_rB)>36){            // เริ่มครั้งแรก / วาร์ป → วางเรียงเส้นตรงแล้วให้ฟิสิกส์ปล่อยหย่อนเอง
+   for(let i=0;i<RN;i++){P[i].lerpVectors(_rA,_rB,i/(RN-1));P[i].y-=Math.sin(Math.PI*i/(RN-1))*.2;V[i].copy(P[i])}r.init=true}
+  const dist=_rA.distanceTo(_rB),restL=Math.max(REIN_L0,dist*1.015),seg=restL/(RN-1);   // สั้น→หย่อนลึก / ยืดจนตึง→เส้นตึงอัตโนมัติ
+  for(let i=1;i<RN-1;i++){
+   const p=P[i],v=V[i],f=i/(RN-1),mid=Math.sin(Math.PI*f);
+   _rD.set(p.x-v.x,p.y-v.y,p.z-v.z).multiplyScalar(.93);                                   // เวโลซิตี้ + แรงหน่วง
+   v.copy(p);
+   let ax=0,ay=-15,az=0;                                                                  // แรงโน้มถ่วง
+   const wb=spdK*(10+6*Math.sin(T*7+i*.9+s)),fl=spdK*Math.sin(T*11+i*1.3+s*2)*3;           // แรงลมต้านตอนบินเร็ว: โบกไปด้านหลัง + สั่นพลิ้ว
+   ax+=_rBk.x*wb+_rRt.x*(fl+turnS*3.2);ay+=_rBk.y*wb+Math.sin(T*9+i)*spdK*2;az+=_rBk.z*wb+_rRt.z*(fl+turnS*3.2);   // turnS>0 = เลี้ยวซ้าย → สายเหวี่ยงออกขวา
+   ay+=(Math.sin(wingPh)*5*flyAmt+Math.sin(walkPhase*2)*3*gaitAmt)*mid;                      // จังหวะกระพือปีก / ก้าวเดิน กระเด้งสาย
+   p.x+=_rD.x+ax*h*h;p.y+=_rD.y+ay*h*h;p.z+=_rD.z+az*h*h}
+  P[0].copy(_rA);P[RN-1].copy(_rB);
+  for(let it=0;it<8;it++)for(let i=0;i<RN-1;i++){                                           // บังคับความยาวแต่ละปล้อง (ปลายสองข้างตรึงไว้)
+   const a=P[i],b=P[i+1],wa=i===0?0:1,wbb=i===RN-2?0:1,wt=wa+wbb;if(!wt)continue;
+   _rD.subVectors(b,a);const d=_rD.length()||1e-5,c=(d-seg)/d/wt;
+   a.addScaledVector(_rD,c*wa);b.addScaledVector(_rD,-c*wbb)}
+  for(let i=1;i<RN-1;i++)if(P[i].y<.05)P[i].y=.05;
+  // ขึ้นรูปท่อ 4 เหลี่ยมตามเส้น (เฟรมอ้างอิงจากแกน +Y)
+  const O=r.pos,N=r.nor;
+  for(let i=0;i<RN;i++){
+   _rT.subVectors(P[Math.min(i+1,RN-1)],P[Math.max(i-1,0)]).normalize();
+   _rN.crossVectors(_rT,_rU);if(_rN.lengthSq()<1e-4)_rN.set(1,0,0);_rN.normalize();_rBn.crossVectors(_rT,_rN);
+   const rad=REIN_R*(1-.2*Math.sin(Math.PI*i/(RN-1))*0);
+   for(let j=0;j<RR;j++){const an=j/RR*6.2832+.785,cx=Math.cos(an),sx=Math.sin(an),o=(i*RR+j)*3,nx=_rN.x*cx+_rBn.x*sx,ny=_rN.y*cx+_rBn.y*sx,nz=_rN.z*cx+_rBn.z*sx;
+    O[o]=P[i].x+nx*rad;O[o+1]=P[i].y+ny*rad;O[o+2]=P[i].z+nz*rad;N[o]=nx;N[o+1]=ny;N[o+2]=nz}}
+  r.g.attributes.position.needsUpdate=true;r.g.attributes.normal.needsUpdate=true;r.m.visible=true}
+}
+const dPuffs=[];
+for(const x of [-.09,.09]) for(let k=0;k<2;k++){const mat=new THREE.MeshBasicMaterial({color:0x666666,transparent:true,opacity:.2,depthWrite:false,fog:false});const m=new THREE.Mesh(SPH,mat);m.scale.setScalar(.2);m.castShadow=false;dHead.add(m);dPuffs.push({m,mat,x,ph:k*.5})}
+const dMouth=new THREE.Object3D();dMouth.position.set(0,-.1,-1.9);dHead.add(dMouth);
+// ไฟพ่น: กรวยเปลวซ้อน 3 ชั้น (ฐานกว้างอยู่ปลายลำ) นอกแดง-ส้ม / กลางเหลือง / แกนขาว-เหลือง
+const fireGeo=new THREE.ConeGeometry(1.1,1,14,1,true);fireGeo.rotateX(Math.PI/2);
+const fm=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:THREE.AdditiveBlending,depthWrite:false,fog:false,side:THREE.DoubleSide});
+fireMesh=new THREE.Mesh(fireGeo,fm(0xff4a10,.5));
+const fMid=new THREE.Mesh(fireGeo,fm(0xffa030,.6)),fCore=new THREE.Mesh(fireGeo,fm(0xfff4c8,.85));
+fMid.scale.set(.62,.62,.94);fMid.position.z=.03;fCore.scale.set(.32,.32,.86);fCore.position.z=.07;
+fireMesh.add(fMid,fCore);fireMesh.visible=false;dMouth.add(fireMesh);
+// ---------- ปีกมังกร: ช่วงปีกกว้าง ~10.6, กรงเล็บข้อพับ, นิ้วกระดูก 4 ก้านโค้งรับกัน, พังผืดเว้าเป็นแฉกคม ----------
+function buildWing(s){
+ const root=new THREE.Group();root.position.set(s*.92,.6,.2);root.rotation.z=-s*.12;dChest.add(root);
+ const inner=new THREE.Group();root.add(inner);
+ limb(inner,DSC2,[0,0,0],[s*2.8,0,0],.14,.095);mk(SPH,DSC,inner,0,0,0,[.26,.24,.32]);
+ const outer=new THREE.Group();outer.position.set(s*2.8,0,0);inner.add(outer);
+ limb(outer,DSC2,[0,0,0],[s*2.8,0,0],.095,.06);mk(SPH,DHN,outer,0,0,0,[.11,.11,.11]);
+ mk(CONE,DCL,outer,s*2.8,.04,-.3,[.09,.65,.09],[-1.25,0,s*.25]);                                   // กรงเล็บข้อพับปีก
+ [[.15,4.0],[-.2,4.6],[-.55,4.2],[-.9,3.4]].forEach(([a,L])=>{const fp=new THREE.Group();fp.position.set(s*2.8,0,0);fp.rotation.y=s*a;outer.add(fp);
+  limb(fp,DHN,[0,0,0],[s*L*.6,0,0],.05,.035,5);const b=new THREE.Group();b.position.set(s*L*.6,0,0);b.rotation.y=-s*.22;fp.add(b);limb(b,DHN,[0,0,0],[s*L*.42,0,0],.035,.015,5)});
+ const EX=2.8,P0=[7.7,2.66],P1=[3.6,1.9],P2=[.3,2.7];   // EX = ตำแหน่งข้อศอก / P0-P2 = เส้นโค้งขอบท้ายปีกเส้นสุดท้าย (ตัดแบ่งที่ x=EX)
+ let ta=0,tb=1;for(let k=0;k<40;k++){const tm=(ta+tb)/2,u=1-tm;(u*u*P0[0]+2*u*tm*P1[0]+tm*tm*P2[0]>EX)?ta=tm:tb=tm}
+ const tc=ta,Q0=[P0[0]+(P1[0]-P0[0])*tc,P0[1]+(P1[1]-P0[1])*tc],Q1=[P1[0]+(P2[0]-P1[0])*tc,P1[1]+(P2[1]-P1[1])*tc],CX=Q0[0]+(Q1[0]-Q0[0])*tc,CY=Q0[1]+(Q1[1]-Q0[1])*tc;   // de Casteljau: จุดตัด C + จุดควบคุมของครึ่งนอก(Q0)/ครึ่งใน(Q1)
+ const shI=new THREE.Shape();shI.moveTo(0,0);shI.lineTo(EX,0);shI.lineTo(EX,CY);shI.quadraticCurveTo(Q1[0],Q1[1],P2[0],P2[1]);shI.lineTo(0,0);   // พังผืดท่อนใน: ต้นแขน → ข้อศอก
+ const shO=new THREE.Shape();shO.moveTo(EX,0);shO.lineTo(5.6,0);shO.lineTo(9.55,-.6);
+ shO.quadraticCurveTo(8.0,.35,10.1,.9);shO.quadraticCurveTo(7.4,1.5,9.18,2.2);shO.quadraticCurveTo(6.4,2.5,P0[0],P0[1]);shO.quadraticCurveTo(Q0[0],Q0[1],EX,CY);shO.lineTo(EX,0);   // พังผืดท่อนนอก: ข้อศอก → ปลายปีก+ก้านนิ้ว
+ const mgI=new THREE.ShapeGeometry(shI,10);mgI.rotateX(Math.PI/2);mgI.translate(0,-.03,0);   // UV ยังใช้พิกัดเดิม → ลายพังผืดต่อเนื่องไม่สะดุดตรงรอยต่อ
+ const mgO=new THREE.ShapeGeometry(shO,10);mgO.rotateX(Math.PI/2);mgO.translate(-EX,-.03,0);   // ย้ายจุดหมุนมาที่ข้อศอก (ตรงกับ origin ของ outer)
+ const memIn=new THREE.Mesh(mgI,DWM);memIn.scale.x=s;memIn.castShadow=false;inner.add(memIn);
+ const memOut=new THREE.Mesh(mgO,DWM);memOut.scale.x=s;memOut.castShadow=false;memOut.frustumCulled=false;outer.add(memOut);
+ const pa=mgO.attributes.position.array,wt=new Float32Array(pa.length/3);   // น้ำหนักสกิน: 1 = ติดขอบรอยต่อ (ตามท่อนใน) → 0 = ห่างข้อศอก/ขอบนำหน้า (ตามท่อนนอก)
+ for(let q=0;q<wt.length;q++){const x=pa[q*3],z=pa[q*3+2];wt[q]=Math.max(0,1-x/EX)*Math.min(1,Math.max(0,z/.6))}
+ const skin={g:mgO,base:new Float32Array(pa),wt};
+ // จุดอ้างอิงสำหรับเอฟเฟกต์ลม: tip = ปลายปีกด้านนอก / mid = กลางแผ่นปีก (ใช้ localToWorld ดึงพิกัดโลกจริง)
+ const tip=new THREE.Object3D();tip.position.set(s*5.2,0,-.4);outer.add(tip);
+ const mid=new THREE.Object3D();mid.position.set(s*2.5,-.1,.4);outer.add(mid);
+ return {s,root,inner,outer,tip,mid,skin};
+}
+const dWings=[buildWing(1),buildWing(-1)];
+const _wq=new THREE.Quaternion(),_wv=new THREE.Vector3();
+function skinWing(w){   // เรียกทุกเฟรมหลังตั้งมุม outer: ขอบรอยต่อพังผืดท่อนนอกถูกดึงให้ตรงกับท่อนใน (สกิน 2 กระดูก) → ไม่ฉีก/ไม่เหลื่อมตอนพับงอ
+ const k=w.skin,P=k.g.attributes.position,a=P.array,b=k.base,wt=k.wt,s=w.s;_wq.copy(w.outer.quaternion).invert();
+ for(let i=0;i<wt.length;i++){const m=wt[i],j=i*3;
+  if(m<=0){a[j]=b[j];a[j+1]=b[j+1];a[j+2]=b[j+2];continue}
+  const X=s*b[j];_wv.set(X,b[j+1],b[j+2]).applyQuaternion(_wq);   // ตำแหน่งจุดนี้ถ้า 'ไม่งอข้อศอก' แปลงมาอยู่ในเฟรมท่อนนอก
+  a[j]=(X+(_wv.x-X)*m)*s;a[j+1]=b[j+1]+(_wv.y-b[j+1])*m;a[j+2]=b[j+2]+(_wv.z-b[j+2])*m}
+ P.needsUpdate=true}
+// ---------- ขา 3 ข้อต่อ: ต้นขาหนา / น่องย้อนข้อ / อุ้งเท้า 4 นิ้ว + กรงเล็บโค้งดำเงา ----------
+const dLegs=[];
+function leg(x,z,len){const p=new THREE.Group(),par=z<.3?dChest:dPelvis;p.position.set(x,.95-1.55,z-(z<.3?0:.3));par.add(p);   // ขาหน้า→อก / ขาหลัง→สะโพก
+ const kn=new THREE.Group(),an=new THREE.Group();kn.position.set(0,-.52,-.22);an.position.set(0,-.30,.16);p.add(kn);kn.add(an);   // ข้อเข่า (kn) ลูกของโคนขา / ข้อเท้า (an) ลูกของเข่า
+ dLegs.push({p,knee:kn,ankle:an,ph:((x<0)===(z<0))?0:Math.PI});
+ const k=len;
+ // ขากำยำตั้งตรงรับน้ำหนัก: ต้นขา-ไหล่หนา → ท่อนบนเฉียงหน้าเล็กน้อย → ข้อเข่า → น่องตั้งเกือบตรง + มัดกล้ามน่อง
+ mk(SPH,DSC,p,0,-.10,-.04,[.42*k,.56*k,.52*k]);
+ limb(p,DSC2,[0,-.10,0],[0,-.52,-.22],.32*k,.21*k,8);mk(SPH,DSC,kn,0,0,0,[.22*k,.22*k,.24*k]);
+ limb(kn,DSC2,[0,0,0],[0,-.30,.16],.20*k,.15*k,8);mk(SPH,DSC2,kn,0,-.12,.12,[.19*k,.24*k,.21*k]);   // มัดกล้ามน่องหลัง
+ // อุ้งเท้าใหญ่: ฐานอุ้งเท้า/ส้นเท้า + นิ้ว 4 นิ้วกางแผ่ + ข้อปล้องนิ้ว + กรงเล็บโค้งจิกพื้น + นิ้วเดือยหลัง
+ mk(SPH,DSC,an,0,-.02,-.08,[.26*k,.13*k,.30*k]);
+ for(const t of [-1.5,-.5,.5,1.5]){limb(an,DSC,[t*.085*k,-.02,-.06],[t*.16*k,-.10,-.62*k+.06],.082*k,.052*k,6);mk(SPH,DSC,an,t*.13*k,-.07,-.42*k+.06,[.068*k,.062*k,.075*k]);mk(CONE,DCL,an,t*.165*k,-.10,-.73*k+.06,[.055*k,.34*k,.065*k],[-2.05,0,0])}
+ limb(an,DSC,[0,-.03,.12],[0,-.08,.32],.04*k,.026*k,5);mk(CONE,DCL,an,0,-.08,.36,[.034*k,.14*k,.034*k],[2.0,0,0]);   // นิ้วเดือย ชี้ไปด้านหลัง
+}
+for(const s of [1,-1]){leg(s*.68,-1.0,.96);leg(s*.84,1.7,1.15)}
+// แสงส้มในปาก (mouthPL) และใต้ท้อง (bellyPL)
+const mouthPL=new THREE.PointLight(0xff6a20,0,20,2);scene.add(mouthPL);
+const bellyPL=new THREE.PointLight(0xff5a1a,0,16,2);scene.add(bellyPL);
+// พูลอนุภาคเปลวไฟ + สะเก็ดไฟ (64 ชิ้น ใช้ซ้ำ)
+const FL_G=new THREE.IcosahedronGeometry(.25,0),SP_G=new THREE.BoxGeometry(.05,.05,.35);
+const FL_M=new THREE.MeshBasicMaterial({color:0xff7a20,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+const SP_M=new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+const FP=[];for(let i=0;i<64;i++){const sp=i%4===0;const m=new THREE.Mesh(sp?SP_G:FL_G,sp?SP_M:FL_M);m.visible=false;m.castShadow=false;scene.add(m);FP.push({m,sp,l:0,L:1,v:new V3()})}
+let fpI=0;const _mp=new V3(),_fq=new THREE.Quaternion(),_fd=new V3();
+function spawnFlame(p,dir){const q=FP[fpI];fpI=(fpI+1)%FP.length;q.L=q.l=R(.35,.6)*(q.sp?.7:1);q.m.visible=true;q.m.position.copy(p).addScaledVector(dir,R(0,.5));
+ q.v.copy(dir).multiplyScalar(R(12,18)*(q.sp?1.2:1));q.v.x+=R(-2,2);q.v.y+=R(-1.5,1.5);q.v.z+=R(-2,2)}
+function updFlame(dt){for(const q of FP){if(q.l<=0)continue;q.l-=dt;q.m.position.addScaledVector(q.v,dt);q.v.multiplyScalar(Math.max(0,1-1.6*dt));
+ const s=Math.max(.05,q.l/q.L);q.m.scale.setScalar(q.sp?s*1.2:1.2*s+.2);if(q.l<=0)q.m.visible=false}}
+
+
+// ---------- DRAGON SHOP (ร้านค้ามังกร) ----------
+const DRAGON_PRICE=0;let coins=500;   // ราคามังกร / เหรียญเริ่มต้น (ตั้ง 0 = ฟรี)
+const shopEl=$('shop'),shopBtn=$('shopBtn'),shopBuy=$('shopBuy');let shopOpen=false;
+function shopRender(){
+ $('shopCoin').textContent=coins;
+ $('shopPrice').textContent=dragonUnlocked?'':(DRAGON_PRICE?'💰 '+DRAGON_PRICE+' เหรียญ':'ฟรี');
+ shopBuy.textContent=dragonUnlocked?'✔ ปลดล็อกแล้ว (Owned)':(DRAGON_PRICE?'ซื้อ / ปลดล็อก':'ปลดล็อก (ฟรี)');
+ shopBuy.disabled=dragonUnlocked;shopBuy.classList.toggle('own',dragonUnlocked)}
+function openShop(){
+ if(shopOpen)return;
+ if(ridingDragon){shout('ลงจากมังกรก่อนจึงจะเปิดร้านได้',1800);return}
+ if(lock)return;                                   // กำลังกรอกรหัสลับอยู่
+ try{document.exitPointerLock()}catch(e){}
+ shopOpen=true;lock=true;shopRender();shopEl.style.display='flex';shopBtn.classList.add('open')}
+function closeShop(){if(!shopOpen)return;shopOpen=false;lock=false;shopEl.style.display='none';shopBtn.classList.remove('open')}
+// หาจุดว่างข้างตัวผู้เล่น (ลำตัวมังกรขนานกับทิศที่หันอยู่ ยาวราว ±6) ไม่ชนสิ่งกีดขวาง
+function dragonSpot(){
+ const fx=-Math.sin(yaw),fz=-Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+ const free=(x,z)=>{for(const a of[-6,-3,0,3,6])for(const b of[-1.8,0,1.8])if(blocked(x+fx*a+rx*b,z+fz*a+rz*b))return false;return true};
+ for(const d of[5.5,7,9,12])for(const s of[1,-1]){const x=px+rx*d*s,z=pz+rz*d*s;if(free(x,z))return[x,z]}
+ return[px+rx*5.5,pz+rz*5.5]}
+function buyDragon(){
+ if(dragonUnlocked)return;
+ if(coins<DRAGON_PRICE){shout('💰 เหรียญไม่พอ',1800);return}
+ coins-=DRAGON_PRICE;
+ const[x,z]=dragonSpot();
+ dragonUnlocked=true;dragonG.visible=true;dragonG.position.set(x,0,z);dragonG.rotation.y=yaw;lastDYaw=yaw;dragSide=1;sideTimer=R(6,12);followYaw=yaw;lastPx=px;lastPz=pz;   // lastDYaw=yaw กัน turnS กระตุกตอนเริ่มเดินตาม / เริ่มเดินฝั่งขวา
+ shopRender();closeShop();
+ shout('🐉 ปลดล็อกมังกรเพลิงแล้ว!\nเดินไปใกล้ๆ แล้วกด E เพื่อขึ้นขี่',3500)}
+shopBtn.addEventListener('click',()=>{shopBtn.blur();shopOpen?closeShop():openShop()});
+shopBuy.addEventListener('click',()=>{shopBuy.blur();buyDragon()});
+$('shopX').addEventListener('click',closeShop);
+shopEl.addEventListener('click',e=>{if(e.target===shopEl)closeShop()});
+['touchstart','touchmove'].forEach(n=>shopEl.addEventListener(n,e=>e.stopPropagation(),{passive:true}));
+addEventListener('keydown',e=>{if(shopOpen&&e.code==='Escape')closeShop()});
+
+// ===== แอนิเมชันขึ้น-ลงมังกร: mountAnim = {dir:1 ขึ้น | -1 ลง, t, sx, sz, syaw, ...} =====
+let mountAnim=null,mountDip=0,kickT=0;            // mountDip: มังกรยุบรับน้ำหนัก / kickT: แรงสะบัดหาง-ปีก (ค่อยๆ จางลง)
+const lerpAng=(a,b,k)=>a+Math.atan2(Math.sin(b-a),Math.cos(b-a))*k;
+// ===== AI มังกรตอนไม่ขี่: เดินเคียงข้าง ⇄ บินวนรอบผู้เล่น (สลับทุก 12-20 วิ หรือเมื่อผู้เล่นวิ่งเร็ว) · aiCall = ผู้เล่นกด E ค้างเรียกลงมาจอดก่อนขึ้นขี่ =====
+let aiFly=false,aiCall=false,aiH=0,aiVy=0,aiSp=0,aiPit=0,aiBnk=0,aiAng=0,aiDir=1,aiRx=18,aiRz=16,aiFlyY=0,aiAltT=0,aiT=R(12,20),aiFast=0,aiCool=0,aiPx=0,aiPz=0;   // aiH = ความสูงมังกรตอนไม่ขี่ / aiFlyY = ความสูงเป้าหมายตอนบินวน
+function callDragon(){if(!dragonUnlocked||ridingDragon||mountAnim||aiCall)return;aiCall=true;aiFly=false;aiSp=dragSpeed;shout('🐉 เรียกมังกรลงมาจอด…',1800)}
+function aiStep(dt){   // true = AI คุมมังกรเฟรมนี้ (บิน/ร่อนลง/วิ่งมารับ) → ข้ามโค้ดเดินพื้น · false = เดินพื้นปกติ
+ const g=dragonG,pv=dt>0?Math.hypot(px-aiPx,pz-aiPz)/dt:0;aiPx=px;aiPz=pz;aiCool=Math.max(0,aiCool-dt);
+ const pickAlt=()=>{aiFlyY=Math.random()<.45?R(3,6):R(15,30);aiAltT=R(4,9)};   // สุ่มบินต่ำเรี่ยพื้น 3-6 หรือบินสูง 15-30
+ const startFly=()=>{aiFly=true;aiT=R(12,20);aiSp=dragSpeed;aiDir=Math.random()<.5?1:-1;aiRx=R(14,24);aiRz=aiRx*R(.7,1);aiAng=Math.atan2(g.position.z-pz,g.position.x-px);pickAlt()};
+ if(!aiFly&&aiH<=.05&&!aiCall){   // ---- โหมดเดินพื้น: นับเวลา / ผู้เล่นวิ่งเร็วต่อเนื่อง → ทะยานขึ้น ----
+  aiFast=pv>6.5?aiFast+dt:Math.max(0,aiFast-dt*2);aiT-=dt;
+  if(aiT<=0||(aiFast>.8&&aiCool<=0))startFly();else{aiH=0;aiVy=0;aiPit=0;aiBnk=0;return false}
+ }
+ if(pv>.6)followYaw=yaw;lastPx=px;lastPz=pz;   // ระหว่างบิน ไม่ให้โค้ดเดินพื้นเห็นว่าผู้เล่น 'ขยับ' ค้างไว้
+ if(aiCall)aiFly=false;
+ const px0=g.position.x,pz0=g.position.z,turnTo=(w,k)=>{let e=w-g.rotation.y;e=Math.atan2(Math.sin(e),Math.cos(e));g.rotation.y+=e*(1-Math.exp(-k*dt))};
+ let tx=px0,tz=pz0,tgtH=0,tgtSp=0;
+ if(aiFly){   // ---- บินวนเป็นวงรีรอบผู้เล่น ----
+  aiT-=dt;if(aiT<=0){aiFly=false;aiT=R(12,20);aiCool=6}
+  aiAltT-=dt;if(aiAltT<=0)pickAlt();
+  aiAng+=aiDir*10/((aiRx+aiRz)*.5)*dt;   // ความเร็วเชิงมุม = v/r (v≈10)
+  const la=aiAng+aiDir*.45;tx=px+Math.cos(la)*aiRx;tz=pz+Math.sin(la)*aiRz;   // ไล่จุดที่นำหน้าบนวงรี → หัวมังกรเฉียงตามโค้งเอง
+  tgtH=aiFlyY;tgtSp=CL(10+Math.max(0,Math.hypot(tx-px0,tz-pz0)-6)*.9,0,22)*CL(.35+aiH/4,.35,1);   // ตามไม่ทัน (ผู้เล่นวิ่ง) → เร่งตาม / ช่วงไต่ขึ้นจากพื้น → ค่อยๆ เร่ง
+ }
+ if(!aiFly){   // ---- ร่อนลงจอดข้างผู้เล่น (aiCall: จอดชิดกว่าเพื่อให้ขึ้นขี่ได้เลย) ----
+  const rx=Math.cos(followYaw),rz=-Math.sin(followYaw),fx=-Math.sin(followYaw),fz=-Math.cos(followYaw),lat=aiCall?3.6:5.2,fw=aiCall?.6:1.2;
+  tx=px+rx*lat*dragSide+fx*fw;tz=pz+rz*lat*dragSide+fz*fw;if(blocked(tx,tz)){const o=dragonSpot();tx=o[0];tz=o[1]}
+  const d=Math.hypot(tx-px0,tz-pz0);tgtH=Math.max(0,Math.min(aiH,(d-1.4)*.5));   // มุมร่อน ~2:1 → ยิ่งใกล้จุดจอดยิ่งต่ำ
+  tgtSp=CL(d*.8+2.5,aiCall?2:3.6,aiH>1?12:9);
+ }
+ aiSp=DMP(aiSp,tgtSp,aiFly?1.6:2.2,dt);
+ const dx=tx-px0,dz=tz-pz0,dl=Math.hypot(dx,dz)||1,st=Math.min(dl,aiSp*dt);
+ g.position.x+=dx/dl*st;g.position.z+=dz/dl*st;if(dl>.6)turnTo(Math.atan2(-dx,-dz),aiFly?3.2:2.6);   // หน้ามังกรอยู่ทาง -Z → หันไปตามทิศที่บิน
+ if(Math.hypot(px-g.position.x,pz-g.position.z)>130){g.position.x=tx;g.position.z=tz;aiH=Math.min(aiH,12)}   // ไกลเกิน → วาร์ปกลับมา
+ aiVy=DMP(aiVy,CL((tgtH-aiH)*1.1,-11,7),2.6,dt);aiH=Math.max(0,aiH+aiVy*dt);   // ไต่สูงสุด 7/วิ · ดิ่งลงสูงสุด 11/วิ
+ const touched=!aiFly&&aiH<=.12&&Math.hypot(tx-g.position.x,tz-g.position.z)<2.4;if(touched){aiH=0;aiVy=0}
+ aiPit=DMP(aiPit,aiH>.05?CL(aiVy*.05,-.42,.32):0,4,dt);   // ไต่ = เชิดหัว / ร่อนลง = ก้มหัว
+ aiBnk=DMP(aiBnk,turnS*CL(aiSp/21,.3,1.1)*.42*2.2*CL(aiH/2,0,1),5,dt);   // เอียงปีกด้านในโค้ง (สูตรเดียวกับตอนขี่ แต่เน้นขึ้น 2.2 เท่า)
+ dragPitch=aiPit;dragBank=aiBnk;g.rotation.x=aiPit;g.rotation.z=aiBnk;dragSpeed=aiSp;
+ if(touched&&Math.abs(aiPit)<.04&&Math.abs(aiBnk)<.04){   // แตะพื้น + ลำตัวตั้งตรงแล้ว → กลับโหมดเดินพื้น (หรือเริ่มขึ้นขี่ถ้าถูกเรียก)
+  aiPit=0;aiBnk=0;dragPitch=0;dragBank=0;g.rotation.x=0;g.rotation.z=0;dust(g.position.x,g.position.z,8);
+  if(aiCall){aiCall=false;mountDragon();return true}
+  return false}
+ return true}
+function mountDragon(){
+ if(!dragonUnlocked||ridingDragon||mountAnim)return;
+ aiFly=false;aiCall=false;aiH=0;aiVy=0;aiSp=0;aiPit=0;aiBnk=0;dragonG.position.y=0;dragSpeed=0;dragonYaw=dragonG.rotation.y;lastDYaw=dragonYaw;   // หยุดมังกร + ซิงก์ทิศหัว
+ const gx=dragonG.position.x,gz=dragonG.position.z,rx=Math.cos(dragonYaw),rz=-Math.sin(dragonYaw);
+ const side=((px-gx)*rx+(pz-gz)*rz)>=0?1:-1;                     // สีข้างมังกรที่อยู่ใกล้ผู้เล่นกว่า
+ const run=Math.hypot(px-(gx+rx*1.6*side),pz-(gz+rz*1.6*side));
+ mountAnim={dir:1,t:0,sx:px,sz:pz,syaw:yaw,side,dx:gx,dz:gz,dur:.85+Math.max(0,run-3)*.07,q:0,y:0,face:yaw,spd:0,jw:0,sw:0};
+ lock=true;flyY=0;                                               // ล็อกการควบคุมชั่วคราว
+ try{document.exitPointerLock()}catch(e){}
+ keys.ShiftLeft=false;
+}
+function dismountDragon(){
+ if(!ridingDragon||mountAnim)return;
+ if(flyY>2.5){shout('บินต่ำกว่านี้ก่อนจึงจะลงได้',2000);return}
+ stopFire();
+ const rx=Math.cos(dragonYaw),rz=-Math.sin(dragonYaw);
+ const clear=s=>!blocked(px+rx*s*1.6,pz+rz*s*1.6)&&!blocked(px+rx*s*3.1,pz+rz*s*3.1);
+ const side=clear(1)||!clear(-1)?1:-1;                           // ลงฝั่งขวาก่อน ถ้าติดของค่อยลงฝั่งซ้าย
+ mountAnim={dir:-1,t:0,sx:px,sz:pz,syaw:dragonYaw,side,dx:px,dz:pz,dur:.85,q:1,y:flyY+1.65,face:dragonYaw,spd:0,jw:1,sw:1};
+ lock=true;
+}
+// อัปเดตทุกเฟรมที่มี mountAnim (เรียกจาก frame ก่อน anim(me,...)): คำนวณ px/pz/ความสูง/ทิศหันของผู้เล่น
+function updMountAnim(dt){
+ const A=mountAnim;A.t+=dt/A.dur;
+ const done=A.t>=1,q0=SS(A.t),q=A.dir===1?q0:1-q0,sd=A.side;   // q: 0=ยืนพื้น → 1=นั่งบนอาน (ลง = ย้อนกลับ)
+ const rx=Math.cos(dragonYaw),rz=-Math.sin(dragonYaw);
+ const Fx=A.dx+rx*1.6*sd,Fz=A.dz+rz*1.6*sd;                    // จุดข้างลำตัว (สีข้างมังกร)
+ const Ex=Fx+rx*1.5*sd,Ez=Fz+rz*1.5*sd;                        // จุดยืนหลังลง (เดินออกจากสีข้างอีก 1.5)
+ if(A.dir<0)flyY=DMP(flyY,0,8,dt);                             // ตอนลง: มังกรลดระดับลงพื้น
+ const sy=flyY+1.65;                                           // ความสูงอาน
+ const fS=A.dir===1?A.syaw:yaw,runD=Math.hypot(Fx-A.sx,Fz-A.sz);
+ const fM=A.dir===1?(runD>.05?Math.atan2(-(Fx-A.sx),-(Fz-A.sz)):A.syaw):Math.atan2(-rx*sd,-rz*sd),fE=dragonYaw;   // ทิศหัน: เริ่ม → ทิศที่วิ่ง/เดิน → ทิศมังกร
+ let x,z,y=0,spd=0,face;
+ if(q<.45){                                                    // 0..0.45 วิ่งเข้าหาสีข้าง (ลง: เดินออกจากสีข้าง)
+  const k=q/.45,S0x=A.dir===1?A.sx:Ex,S0z=A.dir===1?A.sz:Ez;
+  x=LP(S0x,Fx,k);z=LP(S0z,Fz,k);spd=5;face=lerpAng(fS,fM,SS(k));
+ }else{                                                        // 0.45..1 กระโดดโค้งพาราโบลา สีข้าง ↔ กลางอาน
+  const jq=(q-.45)/.55;
+  x=LP(Fx,A.dx,jq);z=LP(Fz,A.dz,jq);y=LP(0,sy,jq)+Math.sin(Math.PI*jq)*1.15;face=lerpAng(fM,fE,SS(jq));
+ }
+ px=x;pz=z;A.q=q;A.y=y;A.face=face;A.spd=spd;
+ A.jw=SS(CL((q-.45)/.1,0,1));A.sw=SS(CL((q-.82)/.18,0,1));    // น้ำหนักท่ากระโดด / ท่านั่งคร่อม
+ if(A.dir===1)yaw=lerpAng(A.syaw,dragonYaw,q0);                // กล้องค่อยๆ หมุนมาอยู่ทิศเดียวกับมังกร (W บินตรงหน้ากล้องเหมือนเดิม)
+ mountDip=Math.sin(Math.PI*CL((q-.75)/.25,0,1))*.22;kickT=Math.max(kickT,mountDip/.22);   // มังกรยุบรับ/ส่งแรงตอนลงน้ำหนักบนอาน
+ if(A.dir<0&&!A.dust&&q<=.45){A.dust=1;dust(x,z,8)}            // ฝุ่นตอนเท้าแตะพื้น
+ if(done){
+  if(A.dir===1){
+   ridingDragon=true;flyY=0;dragonYaw=dragonG.rotation.y;lastDYaw=dragonYaw;yaw=dragonYaw;
+   px=A.dx;pz=A.dz;dragonG.position.set(px,0,pz);
+   shout('🐉 ขึ้นหลังมังกรแล้ว!\nW/S บินหน้า-ถอย · A/D เลี้ยว · Space ไต่ · Shift/C ลง · คลิก/J พ่นไฟ · E/G ลงจากหลัง',4200);
+  }else{
+   ridingDragon=false;flyY=0;dragSpeed=0;aiFly=false;aiCall=false;aiH=0;aiVy=0;aiPit=0;aiBnk=0;aiT=R(12,20);aiCool=6;
+   dragonG.position.set(A.dx,0,A.dz);
+   followYaw=yaw;lastPx=px;lastPz=pz;lastDYaw=dragonYaw;
+   const qx=Math.cos(yaw),qz=-Math.sin(yaw);
+   dragSide=((A.dx-px)*qx+(A.dz-pz)*qz)>=0?1:-1;sideTimer=R(6,12);   // ให้มังกรเดินเคียงฝั่งที่มันอยู่แล้ว ไม่ต้องข้ามตัวผู้เล่น
+   shout('ลงจากมังกรแล้ว',1500);
+  }
+  mountAnim=null;mountDip=0;lock=false;
+ }
+}
+// ท่าทางผู้เล่น (เรียกหลัง anim(me,...) เพื่อทับท่าเดิน): ท่ากระโดด + ท่านั่งคร่อมอาน/ถือบังเหียน
+function poseRider(){
+ const A=mountAnim;if(!A&&ridingWyvern&&!ridingDragon){const u=me.userData;for(let i=0;i<2;i++){u.lu[i].rotation.x=.68;u.lu[i].rotation.y=0;u.lu[i].rotation.z=i?.72:-.72;u.kn[i].rotation.x=-1.05;u.ar[i].rotation.x=.75;u.el[i].rotation.x=.65}return}if(!A&&!ridingDragon)return;
+ const u=me.userData,jw=A?A.jw:0,sw=A?A.sw:1;
+ if(A){me.position.y=A.y;me.rotation.y=A.face}
+ const bl=(o,ax,v,w)=>{if(w>.001)o.rotation[ax]=LP(o.rotation[ax],v,w)};
+ for(let i=0;i<2;i++){bl(u.ar[i],'x',1.4,jw);bl(u.kn[i],'x',-.9,jw)}                      // กระโดด: เอื้อมจับอาน + งอเข่า
+ for(let i=0;i<2;i++){                                                                     // นั่งคร่อมอาน
+  bl(u.lu[i],'x',.75,sw);bl(u.lu[i],'y',0,sw);bl(u.lu[i],'z',i?.55:-.55,sw);               // กางต้นขาออกข้าง + ดันไปหน้า
+  bl(u.kn[i],'x',-1.1,sw);bl(u.ar[i],'x',.85,sw);bl(u.el[i],'x',.75,sw)}                   // งอเข่า + ยื่นแขนจับบังเหียน
+}
+
+// บิน: ความเร็ว 21 ต่อวินาที, Space ไต่, Shift/C ลง (สูงสุด 35), ไม่ชนสิ่งกีดขวางพื้น (ยกเว้นขอบแผนที่)
+// ปุ่มบิน ▲ (ขึ้น) / ▼ (ลง) สำหรับมือถือ — แสดงเฉพาะตอนขี่มังกร กดค้างเพื่อไต่/ร่อนลง
+// ---------- Hold-to-fire: ตัวแปรสถานะ + ปล่อยนิ้วแล้วหยุด ----------
+let isBreathingFire=false,firePid=-1;
+const stopFire=()=>{isBreathingFire=false;firePid=-1};
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0){if(ridingDragon)isBreathingFire=true;else if(ridingWyvern)wyvSlamStart()}});
+addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0&&firePid<0)isBreathingFire=false;if(e.pointerId===firePid)stopFire()});
+addEventListener('pointercancel',e=>{if(e.pointerId===firePid)stopFire()});
+addEventListener('keyup',e=>{if(e.code==='KeyJ')isBreathingFire=false});
+addEventListener('blur',stopFire);
+{const b=$('atk');
+ b.addEventListener('pointerdown',e=>{if(!ridingDragon)return;firePid=e.pointerId;try{b.setPointerCapture(e.pointerId)}catch(_){}});
+ ['pointerup','pointercancel','lostpointercapture'].forEach(n=>b.addEventListener(n,e=>{if(e.pointerId===firePid)stopFire()}));
+ addEventListener('touchend',e=>{if(firePid>=0&&![...e.touches].some(t=>t.target===b))stopFire()});addEventListener('touchcancel',stopFire);}
+// ---------- เป้าเล็งกลางจอ ----------
+{const xh=document.createElement('div');xh.id='xhair';document.body.appendChild(xh)}
+let flyUp=false,flyDn=false,flySpr=false,sprintK=0,sprGlide=false,glideT=0,glideK=0;   // flySpr = ปุ่ม ⚡ · sprintK = ระดับบินเร็ว 0..1 · sprGlide = ช่วงร่อนพัก · glideT = เวลาที่เหลือของช่วง · glideK = ตัวเบลนด์ท่าร่อน
+const FLY_BTN='width:64px;height:64px;border-radius:50%;background:#1b1610d9;color:#c9a15b;border:2px solid #c9a15b;font:inherit;font-size:26px;padding:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 10px #000a';
+const flyUI=document.createElement('div');flyUI.id='flyui';
+flyUI.style.cssText='position:fixed;z-index:6;right:28px;bottom:calc(env(safe-area-inset-bottom,0px) + 310px);display:none;flex-direction:column;gap:12px';
+flyUI.innerHTML=`<button id="flyUp" style="${FLY_BTN}">▲</button><button id="flyDn" style="${FLY_BTN}">▼</button><button id="flySpr" style="${FLY_BTN}">⚡</button>`;
+document.body.appendChild(flyUI);
+const bindFly=(id,set)=>{const b=document.getElementById(id),on=e=>{e.preventDefault();e.stopPropagation();set(true)},off=e=>{e.preventDefault();e.stopPropagation();set(false)};
+ b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,off));
+ b.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});b.addEventListener('touchend',e=>e.stopPropagation(),{passive:true})};
+bindFly('flyUp',v=>flyUp=v);bindFly('flyDn',v=>flyDn=v);bindFly('flySpr',v=>flySpr=v);
+function flyMove(dt,f,s){
+ dragonYaw-=s*1.8*dt;   // A/D = เลี้ยวมังกร (กล้องหมุนอิสระด้วย yaw)
+ if(flyY<=.15){
+  const gSpr=(keys.ControlLeft||keys.KeyR||flySpr)&&f>.05;   // วิ่งเร็วบนพื้น: กดปุ่มเร่ง + ดันไปหน้า
+  airSpd=DMP(airSpd,(gSpr?17.5:6.75)*f,gSpr?2.6:(Math.abs(airSpd)>8?7:30),dt);velYaw=dragonYaw;
+  dragSpeed=Math.max(Math.abs(f)>.05?6.75:0,Math.abs(airSpd)>8.5?Math.abs(airSpd):0)}   // อยู่พื้น: เดินตามทิศหัวเหมือนเดิม
+ else{   // กลางอากาศ: โฉบด้วยความเร็วคงที่ ไม่ตกตอนเลี้ยว
+  const thr=Math.min(1,Math.hypot(f,s)),turnOnly=Math.abs(s)>.05&&Math.abs(f)<=.05;   // thr = แรงรวมของคันโยก (ลากเฉียงก็ยังบินเต็มสปีด)
+  let tgt=0,rate=2.2;
+  const sprOn=(keys.ControlLeft||keys.KeyR||flySpr)&&f>.05;   // Sprint: กด Ctrl ซ้าย / R / ปุ่ม ⚡ ค้าง + ดันคันโยกไปหน้า
+  if(sprOn){glideT-=dt;if(glideT<=0){sprGlide=!sprGlide;glideT=sprGlide?R(1.2,1.6):R(1.8,2.2)}}else{sprGlide=false;glideT=R(1.8,2.2)}   // สลับ กระพือเร่ง(1.8-2.2วิ) ⇄ กางปีกร่อนพัก(1.2-1.6วิ)
+  if(f>.05){tgt=(sprOn?(sprGlide?31:40):21)*thr;rate=sprOn?(sprGlide?1.5:2.4):(airSpd>22?1.8:3.2)}   // เร่ง → 40 / ร่อน ชะลอจาก ~40 ลงเหลือ ~31 / ปล่อยปุ่ม: ลดกลับ 21 อย่างนุ่ม
+  else if(f<-.05){tgt=21*f;rate=3.2}                 // ถอยหลัง: ชะลอ/ถอย
+  else if(turnOnly&&airSpd>8)tgt=airSpd;             // ปล่อยคันเร่งแต่ยังลากเลี้ยว: คงความเร็วเดิม (โมเมนตัม)
+  airSpd=DMP(airSpd,tgt,rate,dt);                    // ปล่อยทั้งคันเร่งและเลี้ยว: ค่อยๆ ชะลอ
+  velYaw=lerpAng(velYaw,dragonYaw,1-Math.exp(-5.5*dt));   // ทิศเคลื่อนที่ไล่ตามทิศหัว → เหวี่ยงออกนอกโค้งเล็กน้อยแบบนกต้านลม
+  dragSpeed=Math.abs(airSpd)>.5?Math.abs(airSpd):0}
+ const vx=-Math.sin(velYaw)*airSpd,vz=-Math.cos(velYaw)*airSpd,nx=px+vx*dt,nz=pz+vz*dt;
+ if(!(Math.abs(nx)>370||nz>VZ2+55||nz<RZ-125)){px=nx;pz=nz}
+ const upK=keys.Space||flyUp,dnK=keys.ShiftLeft||keys.KeyC||flyDn;   // ไต่: เร่งขึ้นหา +12 / ดิ่ง: เร่งลงหา -16 / ปล่อย: ค่อยๆ กลับ 0 (มีแรงเฉื่อย)
+ flyVy=upK&&!dnK?DMP(flyVy,18,4.5,dt):dnK&&!upK?DMP(flyVy,-16,4.0,dt):DMP(flyVy,0,5.0,dt);
+ flyY=CL(flyY+flyVy*dt,0,250);if((flyY<=0&&flyVy<0)||(flyY>=250&&flyVy>0))flyVy=0;
+}
+// ซิงก์ตำแหน่ง + ปีก (2 ข้อต่อเหลื่อมเฟส) + คอ/หางคลื่น + เอียงตอนเลี้ยว + อ้าปาก + ควัน + เปลวไฟ
+let turnS=0,lastDYaw=yaw,jawOpen=0,dragSpeed=0,walkPhase=0,gaitAmt=0,wingFold=0,groundRunK=0,gaPh=0,runSurge=false,runSurgeT=0,runSurgeK=0,nF=0,nH=0,dragSide=1,sideTimer=0,followYaw=yaw,lastPx=px,lastPz=pz;   // followYaw/lastPx/lastPz: ทิศอ้างอิงตอนผู้เล่นเดินจริง / พิกัดเฟรมก่อน | dragSide: 1=ขวา, -1=ซ้าย (ฝั่งที่มังกรเดินเคียงข้างผู้เล่น)
+// สะเก็ดไฟคุกรุ่น (ใช้ตลอด ไม่ต้องพ่นไฟ)
+const EMB=[];{const EG=new THREE.SphereGeometry(.05,5,4);for(let i=0;i<48;i++){const m=new THREE.Mesh(EG,SP_M);m.visible=false;m.castShadow=false;scene.add(m);EMB.push({m,l:0,L:1,v:new V3()})}}
+let embI=0;
+function spawnEmber(p){const q=EMB[embI];embI=(embI+1)%EMB.length;q.L=q.l=R(.7,1.4);q.m.visible=true;q.m.position.copy(p);q.v.set(R(-.5,.5),R(.5,1.5),R(-.5,.5))}
+function updEmb(dt){for(const q of EMB){if(q.l<=0)continue;q.l-=dt;q.m.position.addScaledVector(q.v,dt);q.v.y+=.6*dt;q.m.scale.setScalar(Math.max(.05,q.l/q.L)*1.4);if(q.l<=0)q.m.visible=false}}
+// กระพือปีกไม่สมมาตร: กดลงเร็ว (38% ของรอบ) ยกขึ้นนุ่ม (62%) ; +1 = ปีกสุดบน, -1 = สุดล่าง
+const wingA=p=>{let u=(p/6.2832)%1;if(u<0)u+=1;return u<.38?Math.cos(Math.PI*u/.38):-Math.cos(Math.PI*(u-.38)/.62)};
+// ===== Hold-to-fire + Epic Breath VFX =====
+const impactPL=new THREE.PointLight(0xff7a20,0,22,2);scene.add(impactPL);
+// เพิ่มความหลากหลายของลำไฟ: ชั้นกลางเป็นกรวย 5 เหลี่ยม เพื่อให้เห็นการหมุนควงสว่าน
+{const g5=new THREE.ConeGeometry(1.1,1,5,1,true);g5.rotateX(Math.PI/2);fMid.geometry=g5}
+// วงแหวนคลื่นกระแทกความร้อน
+const RING_G=new THREE.TorusGeometry(1,.07,6,28),RINGS=[];
+for(let i=0;i<6;i++){const m=new THREE.Mesh(RING_G,new THREE.MeshBasicMaterial({color:0xff9a30,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));m.visible=false;m.castShadow=false;scene.add(m);RINGS.push({m,s:1})}
+// รอยไหม้บนพื้น + วงไฟลุกท่วมพื้น
+const SC_G=new THREE.CircleGeometry(1,16);SC_G.rotateX(-Math.PI/2);const SCORCH=[];
+for(let i=0;i<16;i++){const m=new THREE.Mesh(SC_G,new THREE.MeshBasicMaterial({color:0x050302,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,fog:false}));m.visible=false;m.castShadow=false;scene.add(m);SCORCH.push({m,l:0})}
+const poolMat=new THREE.MeshBasicMaterial({color:0xff5a10,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false});
+const firePool=new THREE.Mesh(SC_G,poolMat);firePool.visible=false;firePool.castShadow=false;scene.add(firePool);
+let scI=0,scT=0,ringI=0,ringT=0,burnT=0,fireRamp=0,spinA=0,wasFiring=false,chargeT=0;
+const _ao=new V3(),_av=new V3(),_im=new V3(),_ZN=new V3(0,0,-1),_ZP=new V3(0,0,1),_aq=new THREE.Quaternion(),_tq=new THREE.Quaternion(),_sq=new THREE.Quaternion(),_ld=new V3();
+function addScorch(x,z){const q=SCORCH[scI];scI=(scI+1)%SCORCH.length;q.l=7;q.m.visible=true;q.m.position.set(x+R(-.8,.8),.06,z+R(-.8,.8));q.m.scale.setScalar(R(1.1,2.1));q.m.rotation.y=R(0,6.28)}
+function updScorch(dt){for(const q of SCORCH){if(q.l<=0)continue;q.l-=dt;q.m.material.opacity=.6*Math.min(1,q.l/2);if(q.l<=0)q.m.visible=false}}
+function emberBurst(p,n){for(let i=0;i<n;i++){const q=EMB[embI];embI=(embI+1)%EMB.length;const a=R(0,6.283),sp=R(2,6);q.L=q.l=R(.5,1.1);q.m.visible=true;q.m.position.copy(p);q.v.set(Math.cos(a)*sp,R(2,6),Math.sin(a)*sp)}}
+// ===== 1. อัปเกรดระบบเสียงให้มีช่วงสูดลมหายใจ (inhale) + จุดระเบิด (ignite) + ไฟมอด (stop) =====
+const dragonFireAudio = (() => {
+ let active = null, noiseBuf = null;
+
+ function getNoise(c) {
+  if (noiseBuf) return noiseBuf;
+  const len = c.sampleRate * 2;
+  noiseBuf = c.createBuffer(1, len, c.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+   const white = Math.random() * 2 - 1;
+   last = (last + 0.06 * white) / 1.06;
+   d[i] = last * 2.8 + white * 0.18;
+  }
+  return noiseBuf;
+ }
+
+ // ระยะที่ 1: สูดลมหายใจเข้า + ก๊าซเดือดในลำคอ (Inhale & Charge)
+ function inhale() {
+  if (active) return;
+  try {
+   const c = aud();
+   if (c.state === 'suspended') c.resume();
+   const t = c.currentTime, buf = getNoise(c);
+
+   const master = c.createGain();
+   master.gain.setValueAtTime(0.001, t);
+   master.gain.linearRampToValueAtTime(0.55, t + 0.55);
+   const comp = c.createDynamicsCompressor();
+   comp.threshold.value = -10; comp.ratio.value = 6;
+   master.connect(comp); comp.connect(c.destination);
+
+   // เสียงสูดอากาศเข้าปอดมังกร (Filter กวาดจากต่ำขึ้นสูง)
+   const inSrc = c.createBufferSource();
+   inSrc.buffer = buf; inSrc.loop = true;
+   const inFlt = c.createBiquadFilter(), inG = c.createGain();
+   inFlt.type = 'bandpass'; inFlt.Q.value = 1.6;
+   inFlt.frequency.setValueAtTime(140, t);
+   inFlt.frequency.exponentialRampToValueAtTime(680, t + 0.6);
+   inG.gain.setValueAtTime(0.01, t);
+   inG.gain.linearRampToValueAtTime(0.55, t + 0.55);
+   inSrc.connect(inFlt); inFlt.connect(inG); inG.connect(master);
+   inSrc.start(t);
+
+   // เสียงคำรามต่ำในลำคอเตรียมจุดไฟ
+   const growl = c.createOscillator(), growlSub = c.createOscillator();
+   const growlFlt = c.createBiquadFilter(), growlG = c.createGain();
+   growl.type = 'sawtooth'; growl.frequency.setValueAtTime(42, t);
+   growl.frequency.linearRampToValueAtTime(64, t + 0.6);
+   growlSub.type = 'sine'; growlSub.frequency.setValueAtTime(32, t);
+   growlFlt.type = 'lowpass'; growlFlt.frequency.setValueAtTime(120, t);
+   growlFlt.frequency.linearRampToValueAtTime(240, t + 0.6);
+   growlG.gain.setValueAtTime(0.05, t);
+   growlG.gain.linearRampToValueAtTime(0.45, t + 0.55);
+   growl.connect(growlFlt); growlSub.connect(growlFlt);
+   growlFlt.connect(growlG); growlG.connect(master);
+   growl.start(t); growlSub.start(t);
+
+   active = { stage: 'inhale', c, master, inSrc, inG, growl, growlSub, growlFlt, growlG };
+  } catch (e) {}
+ }
+
+ // ระยะที่ 2: จุดระเบิดเปลวเพลิง (Ignition & Roaring Jet)
+ function ignite() {
+  if (!active) inhale();
+  if (!active || active.stage === 'fire') return;
+  try {
+   const cur = active, c = cur.c, t = c.currentTime, buf = getNoise(c);
+   cur.stage = 'fire';
+
+   // ปิดเสียงสูดลม
+   cur.inG.gain.setTargetAtTime(0.001, t, 0.03);
+   setTimeout(() => { try { cur.inSrc.stop(); cur.inSrc.disconnect(); } catch (_) {} }, 120);
+
+   cur.master.gain.setTargetAtTime(0.7, t, 0.04);
+
+   // แรงระเบิดจุดไฟ (Whoomph!)
+   const boom = c.createOscillator(), boomG = c.createGain();
+   boom.type = 'triangle';
+   boom.frequency.setValueAtTime(155, t);
+   boom.frequency.exponentialRampToValueAtTime(34, t + 0.36);
+   boomG.gain.setValueAtTime(0.85, t);
+   boomG.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+   boom.connect(boomG); boomG.connect(cur.master);
+   boom.start(t); boom.stop(t + 0.44);
+
+   // เปลวไฟพ่นต่อเนื่อง
+   const jet = c.createBufferSource();
+   jet.buffer = buf; jet.loop = true;
+   const jetFlt = c.createBiquadFilter(), jetHi = c.createBiquadFilter(), jetG = c.createGain();
+   jetFlt.type = 'bandpass'; jetFlt.frequency.setValueAtTime(360, t); jetFlt.Q.value = 0.85;
+   jetHi.type = 'highshelf'; jetHi.frequency.value = 1800; jetHi.gain.value = 5.5;
+   jetG.gain.setValueAtTime(0.01, t);
+   jetG.gain.linearRampToValueAtTime(0.9, t + 0.08);
+   jet.connect(jetFlt); jetFlt.connect(jetHi); jetHi.connect(jetG); jetG.connect(cur.master);
+   jet.start(t);
+
+   const lfo = c.createOscillator(), lfoG = c.createGain();
+   lfo.type = 'sine'; lfo.frequency.value = 9.5;
+   lfoG.gain.value = 115;
+   lfo.connect(lfoG); lfoG.connect(jetFlt.frequency);
+   lfo.start(t);
+
+   cur.jet = jet; cur.jetFlt = jetFlt; cur.lfo = lfo;
+  } catch (e) {}
+ }
+
+ function update(ramp, pitchVal) {
+  if (!active || active.stage !== 'fire' || !active.jetFlt) return;
+  const { c, growl, growlFlt, jetFlt } = active, t = c.currentTime;
+  jetFlt.frequency.setTargetAtTime(280 + ramp * 230 + Math.sin(t * 17) * 45, t, 0.04);
+  growl.frequency.setTargetAtTime(50 + ramp * 16 - pitchVal * 6, t, 0.05);
+  growlFlt.frequency.setTargetAtTime(140 + ramp * 95, t, 0.05);
+ }
+
+ // ระยะที่ 3: ไฟมอด & พ่นควันค้างท่อ (Tail Extinguish & Snort)
+ function stop() {
+  if (!active) return;
+  const cur = active; active = null;
+  try {
+   const c = cur.c, t = c.currentTime;
+   if (cur.jetFlt) cur.jetFlt.frequency.setTargetAtTime(130, t, 0.09);
+   if (cur.inG) cur.inG.gain.setTargetAtTime(0.001, t, 0.04);
+
+   // เสียงพ่นลมฟู่เบาๆ ไล่ควันออกจากจมูกตอนจบ
+   if (cur.stage === 'fire') {
+    const snort = c.createBufferSource(), sFlt = c.createBiquadFilter(), sG = c.createGain();
+    snort.buffer = getNoise(c);
+    sFlt.type = 'bandpass'; sFlt.Q.value = 2.2;
+    sFlt.frequency.setValueAtTime(950, t + 0.08);
+    sFlt.frequency.exponentialRampToValueAtTime(320, t + 0.42);
+    sG.gain.setValueAtTime(0.001, t);
+    sG.gain.linearRampToValueAtTime(0.28, t + 0.12);
+    sG.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    snort.connect(sFlt); sFlt.connect(sG); sG.connect(cur.master);
+    snort.start(t + 0.06); snort.stop(t + 0.48);
+   }
+
+   cur.master.gain.setValueAtTime(cur.master.gain.value, t);
+   cur.master.gain.exponentialRampToValueAtTime(0.0008, t + 0.48);
+   setTimeout(() => {
+    [cur.inSrc, cur.growl, cur.growlSub, cur.jet, cur.lfo].forEach(n => {
+     if (n) try { n.stop(); n.disconnect(); } catch (_) {}
+    });
+    try { cur.master.disconnect(); } catch (_) {}
+   }, 520);
+  } catch (e) {}
+ }
+
+ return { inhale, ignite, update, stop };
+})();
+// ===== ควันออกจากปากมังกรหลังหยุดพ่นไฟ (Mouth Smoke Pool) =====
+let fireTailT = 0, mouthSmokeT = 0, lastFireLen = 15, lastFireW = 2;
+const MSM=[],_msd=new V3();let msI=0;
+{for(let i=0;i<28;i++){const m=new THREE.Mesh(SPH,new THREE.MeshBasicMaterial({color:0x444444,transparent:true,opacity:0,depthWrite:false}));m.visible=false;m.castShadow=false;scene.add(m);MSM.push({m,l:0,L:1,v:new V3(),s0:.3,s1:1.5})}}
+function spawnMouthSmoke(p,dir){const q=MSM[msI];msI=(msI+1)%MSM.length;q.L=q.l=R(1,1.7);q.s0=R(.18,.3);q.s1=R(1.1,1.8);q.m.visible=true;q.m.position.copy(p).addScaledVector(dir,.3);q.m.scale.setScalar(q.s0);q.m.material.opacity=.5;q.v.copy(dir).multiplyScalar(R(2.5,4.5));q.v.x+=R(-.4,.4);q.v.y+=R(.2,.8);q.v.z+=R(-.4,.4)}   // พุ่งไปข้างหน้าช้าๆ แล้วลอยขึ้น
+function updMouthSmoke(dt){for(const q of MSM){if(q.l<=0)continue;q.l-=dt;if(q.l<=0){q.m.visible=false;q.m.material.opacity=0;continue}const a=1-q.l/q.L;q.v.multiplyScalar(Math.exp(-1.8*dt));q.v.y+=1.6*dt;q.m.position.addScaledVector(q.v,dt);q.m.scale.setScalar(q.s0+(q.s1-q.s0)*a);q.m.material.opacity=.5*Math.min(1,a*8)*(1-a)}}   // ขยายตัวและจางหาย
+// เรียกทุกเฟรมที่กำลังพ่นไฟ: เล็งตามเป้ากลางจอ → วาดลำไฟ/วงแหวน/จุดตกกระทบ → ทำดาเมจทุก 0.15 วิ
+function fireFrame(dt){
+ if(!wasFiring){wasFiring=true;chargeT=.6;dragonFireAudio.inhale();fireRamp=0;burnT=0;ringT=0;fireTailT=0;mouthSmokeT=0;fireMesh.visible=false;firePool.visible=false;impactPL.intensity=0;mouthPL.intensity=0;bellyPL.intensity=0}
+ if(chargeT>0){chargeT-=dt;if(chargeT>0)return;dragonFireAudio.ignite()}   // สูดลมหายใจ 0.6 วิ ก่อนไฟพุ่งจริง
+ fireRamp=Math.min(1,fireRamp+dt*6);dragonFireAudio.update(fireRamp,pitch);spinA+=dt*22;
+ dMouth.updateWorldMatrix(true,false);dMouth.getWorldPosition(_mp);dMouth.getWorldQuaternion(_fq);
+ // --- เล็ง: ยิงเรย์จากกล้องผ่านกลางจอ (ตรงกับสูตรกล้องใน loop) ไปหาพื้น ---
+ const cp=Math.cos(pitch),dx=-Math.sin(yaw)*cp,dy=Math.sin(pitch),dz=-Math.cos(yaw)*cp,hy=flyY+2.8;
+ _ao.copy(cam.position);cam.getWorldDirection(_av);   // เล็งจากตำแหน่งกล้อง+ทิศมองจริง (ตรงกลางจอทั้งมุมมอง 1 และ 3)
+ let t=50;if(_av.y<-.01)t=Math.min(t,-_ao.y/_av.y);
+ t=Math.max(t,(_mp.x-_ao.x)*_av.x+(_mp.y-_ao.y)*_av.y+(_mp.z-_ao.z)*_av.z+4);
+ _im.copy(_ao).addScaledVector(_av,t);if(_im.y<.05)_im.y=.05;
+ _fd.copy(_im).sub(_mp);const L=CL(_fd.length(),4,50);_fd.normalize();
+ // --- ลำไฟ: หมุนควงสว่าน + ยืดหดตามแรงดัน ---
+ _aq.setFromUnitVectors(_ZN,_fd);_tq.copy(_fq).invert().multiply(_aq);_ld.copy(_ZN).applyQuaternion(_tq);
+ const Lp=L*fireRamp*(1+.05*Math.sin(T*38)+.04*Math.sin(T*23)),w=1.6+L*.045+R(-.12,.12);
+ fireMesh.visible=true;fireMesh.quaternion.copy(_tq).multiply(_sq.setFromAxisAngle(_ZP,spinA));
+ fireMesh.position.copy(_ld).multiplyScalar(Lp/2);fireMesh.scale.set(w,w,Lp);lastFireLen=Lp;lastFireW=w;mouthSmokeT=1.2;
+ fMid.rotation.z=-spinA*1.7;fCore.rotation.z=spinA*2.4;
+ for(let k=0;k<4;k++)spawnFlame(_mp,_fd);
+ // --- วงแหวนคลื่นกระแทกวิ่งไล่ตามลำไฟ ---
+ ringT-=dt;if(ringT<=0){ringT=.16;RINGS[ringI].s=0;ringI=(ringI+1)%RINGS.length}
+ for(const r of RINGS){if(r.s>=1){r.m.visible=false;continue}r.s+=dt*2.3;const s=r.s;r.m.visible=s<1;
+  r.m.position.copy(_mp).addScaledVector(_fd,s*L*.9+.5);r.m.quaternion.copy(_aq);r.m.scale.setScalar(.3+1.1*w*s);r.m.material.opacity=.75*(1-s)}
+ // --- จุดตกกระทบ: ไฟท่วมพื้น + สะเก็ด + รอยไหม้ + แสง ---
+ impactPL.position.set(_im.x,_im.y+1.2,_im.z);impactPL.intensity=(Math.random()<.4?5:10)+Math.random()*4;
+ if(_im.y<1.5){firePool.visible=true;firePool.position.set(_im.x,.12,_im.z);firePool.scale.setScalar(2.8+Math.sin(T*21)*.35+R(-.15,.15));poolMat.opacity=.5+.25*Math.sin(T*17);
+  spawnFlame(_im,UPV);spark(_im.x,.3,_im.z,3,.9);emberBurst(_im,2);
+  if((scT-=dt)<=0){scT=.12;addScorch(_im.x,_im.z)}}
+ else firePool.visible=false;
+ // --- แสงกระพริบ + กล้องสั่นเบาๆ ---
+ mouthPL.intensity=(Math.random()<.35?4:9)+Math.random()*5;mouthPL.position.copy(_mp);
+ bellyPL.intensity=(Math.random()<.4?1.5:4.5)+Math.random()*1.5;bellyPL.position.copy(dragonG.localToWorld(new V3(0,.4,.6)));
+ shk=Math.max(shk,.2);
+ if(wyvernState==='HOSTILE'){   // ดาเมจไฟ → ไวเวิร์นดิน (ลำไฟ _mp→_mp+_fd*Lp + จุดตกกระทบ _im)
+  const wp=wyvernG.position,wy=wp.y+2.6,cx=wp.x-_mp.x,cy=wy-_mp.y,cz=wp.z-_mp.z,tt=CL(cx*_fd.x+cy*_fd.y+cz*_fd.z,0,Lp),
+   qx=_mp.x+_fd.x*tt-wp.x,qy=_mp.y+_fd.y*tt-wy,qz=_mp.z+_fd.z*tt-wp.z;
+  if(qx*qx+qy*qy+qz*qz<30||Math.hypot(_im.x-wp.x,_im.z-wp.z)<6.5){
+   wyvernHp-=45*dt;wyvHitT=.12;setFlash(wyvernG,Math.floor(T*16)%2===0);
+   spark(wp.x+R(-2.5,2.5),wy+R(-1,1.5),wp.z+R(-2.5,2.5),2,1);
+   if(wyvernHp<=0)wyvStagger()}}
+}
+function fireOff(dt=.016){
+ if(wasFiring){wasFiring=false;dragonFireAudio.stop();if(chargeT<=0)fireTailT=.45;chargeT=0;fireRamp=0}
+ if(fireTailT>0){   // ไฟกำลังมอด: ลำไฟหดสั้น-เรียว + หรี่แสง ไม่ตัดดับทันที
+  fireTailT=Math.max(0,fireTailT-dt);const k=fireTailT/.45;
+  dMouth.updateWorldMatrix(true,false);dMouth.getWorldPosition(_mp);_fd.copy(_ZN).transformDirection(dMouth.matrixWorld);
+  const sc=lastFireW*(.25+.75*k);fireMesh.visible=true;fireMesh.position.copy(_ld).multiplyScalar(lastFireLen*k/2);fireMesh.scale.set(sc,sc,Math.max(.001,lastFireLen*k));
+  mouthPL.position.copy(_mp);mouthPL.intensity=7*k*k;bellyPL.intensity=3*k*k;impactPL.intensity*=.85;
+  if(firePool.visible)poolMat.opacity*=.9;
+  spawnEmber(_mp);if(Math.random()<dt*60)spawnMouthSmoke(_mp,_fd);
+  if(fireTailT<=0){fireMesh.visible=false;firePool.visible=false;impactPL.intensity=0;mouthPL.intensity=0;bellyPL.intensity=0}
+ }else{fireMesh.visible=false;firePool.visible=false;impactPL.intensity=0;mouthPL.intensity=0;bellyPL.intensity=0}
+ if(mouthSmokeT>0){   // ควันค้างท่อหลังไฟดับ ~1.2 วิ
+  mouthSmokeT=Math.max(0,mouthSmokeT-dt);
+  dMouth.updateWorldMatrix(true,false);dMouth.getWorldPosition(_mp);_fd.copy(_ZN).transformDirection(dMouth.matrixWorld);
+  if(Math.random()<dt*24)spawnMouthSmoke(_mp,_fd)}
+ for(const r of RINGS)if(r.s<1){r.s=1;r.m.visible=false}}
+let wingPh=0,flapR=1.8,fireK=0,stretchS=0,hoverS=0,aimYawS=0;   // hoverS: ความลอยตัวนิ่งกลางอากาศ (ปรับให้นุ่ม)
+// ---------- เอฟเฟกต์ลม/กระแสอากาศปีกมังกร (ทำงานอัตโนมัติตามจังหวะปีก + ความเร็วบิน) ----------
+// 1) เส้นกระแสลมปลายปีก (ริบบิ้นโปร่งแสงตามปลายปีกซ้าย-ขวา) 2) ริ้วลมสั้นๆ บนพังผืด (InstancedMesh 60 ชิ้น) 3) วงแหวนคลื่นลมใต้ปีก + ฝุ่นพื้นตอนกดปีกลง
+const WTN=18,WSN=60,WRN=8;
+const wTrails=dWings.map(w=>{
+ const pos=new Float32Array(WTN*6),col=new Float32Array(WTN*6),idx=[];
+ for(let i=0;i<WTN-1;i++){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.setIndex(idx);
+ const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false}));
+ m.frustumCulled=false;m.visible=false;m.castShadow=false;scene.add(m);   // สีค่อยๆ ดำลงปลายทาง (additive) = จางหายแบบโปร่งแสง
+ return {w,m,g,pos,col,pts:Array.from({length:WTN},()=>new V3()),n:0,acc:0,k:0}});
+const wStM=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0xdff0ff,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}),WSN),
+ wSt=Array.from({length:WSN},()=>({l:0,L:1,x:0,y:0,z:0,vx:0,vy:0,vz:0,len:1,dx:0,dy:0,dz:1})),wDum=new THREE.Object3D(),
+ _wZ=new V3(0,0,1),_wA=new V3(),_wB=new V3(),_wC=new V3(),_wD=new V3(),_wE=new V3();
+wStM.frustumCulled=false;wStM.castShadow=false;wDum.scale.setScalar(0);wDum.updateMatrix();for(let i=0;i<WSN;i++)wStM.setMatrixAt(i,wDum.matrix);scene.add(wStM);
+const wRingG=new THREE.RingGeometry(.72,1,32);wRingG.rotateX(-Math.PI/2);
+const wRings=Array.from({length:WRN},()=>{const mat=new THREE.MeshBasicMaterial({color:0xcfe6ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,fog:false});
+ const m=new THREE.Mesh(wRingG,mat);m.visible=false;m.frustumCulled=false;m.castShadow=false;scene.add(m);return {m,mat,l:0,L:.6,s0:.8,s1:4,vy:0,op:.3}});
+let wRI=0,wStI=0,wStAcc=0,wPrevAI=0,wAlive=false;
+function updDragonWind(dt,riding,aI,amp,fo,climbK,diveK){
+ const pa=wPrevAI;wPrevAI=aI;
+ const vis=dragonG.visible,flyK=(vis&&riding)?CL(1-fo*2,0,1):0;   // พับปีก/อยู่พื้น (wingFold>0.5) → เอฟเฟกต์จางหาย
+ if(flyK<=0&&!wAlive||dt<=0)return;
+ if(flyK>0)dragonG.updateMatrixWorld(true);
+ const spd=Math.abs(airSpd),spdK=CL(spd/21,0,1),turnK=CL(Math.abs(turnS)/2.5,0,1);
+ const vK=flyK*CL(.14+spdK*.62+turnK*.38+diveK*.5+climbK*.15+sprintK*.3,0,1);   // ความแรงลมรวม: เร็ว / เลี้ยวโค้ง / ดิ่ง ยิ่งชัด
+ let alive=false;
+ // ===== 1) เส้นกระแสลมปลายปีก =====
+ for(const tr of wTrails){
+  const w=tr.w;
+  if(flyK>0){
+   w.tip.localToWorld(_wA.set(0,0,0));
+   if(tr.n===0){tr.pts[0].copy(_wA);tr.n=1;tr.acc=0}
+   tr.pts[0].copy(_wA);tr.acc+=dt;
+   if(tr.acc>=.03){tr.acc=0;for(let i=Math.min(tr.n,WTN-1);i>=1;i--)tr.pts[i].copy(tr.pts[i-1]);tr.n=Math.min(tr.n+1,WTN)}
+   tr.k=DMP(tr.k,vK*(1+CL(w.s*dragBank*2.2,-.4,.6)),6,dt);   // ปีกด้านนอกโค้งเคลื่อนเร็วกว่า → เส้นชัดกว่า
+  }else tr.k=DMP(tr.k,0,8,dt);
+  if(tr.k<.012){tr.m.visible=false;if(flyK<=0)tr.n=0;continue}
+  alive=true;tr.m.visible=true;
+  const kk=CL(tr.k,0,1),sn=Math.max(2,Math.floor(tr.n*LP(.35,1,CL(kk*1.25,0,1)))),wd=LP(.05,.2,kk)*(1+.3*sprintK*(1+glideK)),pts=tr.pts,P=tr.pos,C=tr.col;
+  for(let i=0;i<WTN;i++){
+   const ii=Math.min(i,sn-1),p=pts[ii],a=pts[Math.max(ii-1,0)],b=pts[Math.min(ii+1,sn-1)],f=ii/(sn-1);
+   _wB.subVectors(a,b);_wC.subVectors(cam.position,p);_wD.crossVectors(_wB,_wC);   // ริบบิ้นหันหน้าเข้ากล้องเสมอ
+   if(_wD.lengthSq()<1e-6)_wD.set(0,1,0);else _wD.normalize();
+   const taper=Math.pow(1-f,.7)*(.45+.55*Math.min(1,ii*.6)),ww=wd*taper,wob=Math.sin(T*16+ii*.9+w.s)*.05*f*kk;
+   const o=i*6;
+   P[o]=p.x+_wD.x*ww;P[o+1]=p.y+_wD.y*ww+wob;P[o+2]=p.z+_wD.z*ww;
+   P[o+3]=p.x-_wD.x*ww;P[o+4]=p.y-_wD.y*ww+wob;P[o+5]=p.z-_wD.z*ww;
+   const al=i<sn?kk*Math.pow(1-f,1.4)*.8:0;
+   C[o]=C[o+3]=.78*al;C[o+1]=C[o+4]=.9*al;C[o+2]=C[o+5]=al;}
+  tr.g.attributes.position.needsUpdate=true;tr.g.attributes.color.needsUpdate=true;}
+ // ===== 2) ละอองลมไหลผ่านพังผืดปีก (สั้น บาง พุ่งจากขอบหน้าไปด้านหลัง) =====
+ const u=((wingPh/6.2832)%1+1)%1,ds=u<.38?Math.sin(Math.PI*u/.38):0;   // ds = ความแรงจังหวะกดปีกลง (0..1)
+ if(flyK>0){
+  const sK=flyK*CL(.05+spdK*.85+ds*CL(amp,0,1)*.9+turnK*.2,0,1);
+  wStAcc=Math.min(wStAcc+dt*120*sK,6);
+  _wB.set(0,0,1).transformDirection(dragonG.matrixWorld);   // ทิศด้านหลังลำตัว (รวมก้ม/เงย/เอียง)
+  const ivx=-Math.sin(velYaw)*airSpd*.7,ivz=-Math.cos(velYaw)*airSpd*.7,ivy=flyVy*.7;   // สืบทอดความเร็วบางส่วน → ริ้วลมติดปีกก่อนหลุดไปด้านหลัง
+  while(wStAcc>=1){wStAcc-=1;
+   const w=dWings[Math.random()<.5?0:1],r=Math.random(),p=wSt[wStI=(wStI+1)%WSN],bs=2.5+spd*.15;
+   if(r<.4){_wA.set(w.s*2.8*(r/.4),R(-.05,.15),R(-.1,1.2));w.inner.localToWorld(_wA)}
+   else{const q=(r-.4)/.6;_wA.set(w.s*q*4.6,R(-.05,.15),R(-.15,1.0)*(1-q*.5));w.outer.localToWorld(_wA)}
+   p.x=_wA.x;p.y=_wA.y;p.z=_wA.z;
+   p.vx=ivx+_wB.x*bs;p.vy=ivy+_wB.y*bs-ds*2;p.vz=ivz+_wB.z*bs;
+   _wC.set(_wB.x,_wB.y-.12*ds,_wB.z).normalize();p.dx=_wC.x;p.dy=_wC.y;p.dz=_wC.z;
+   p.len=R(.9,2.2)*(.6+.9*spdK);p.L=p.l=R(.28,.5)}
+ }
+ for(let i=0;i<WSN;i++){const p=wSt[i];let s=0;
+  if(p.l>0){alive=true;p.l-=dt;const q=CL(1-p.l/p.L,0,1);p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;s=Math.sin(Math.PI*q);   // โผล่-เหยียด-จาง
+   wDum.position.set(p.x,p.y,p.z);wDum.quaternion.setFromUnitVectors(_wZ,_wE.set(p.dx,p.dy,p.dz));wDum.scale.set(.022,.022,p.len*s+.001)}
+  else wDum.scale.setScalar(0);
+  if(p.l<=0&&s===0){wDum.position.set(0,-99,0)}
+  wDum.updateMatrix();wStM.setMatrixAt(i,wDum.matrix)}
+ wStM.instanceMatrix.needsUpdate=true;
+ // ===== 3) คลื่นอากาศอัดใต้ปีก + ฝุ่นพื้นตอนกดปีกลงสุดจังหวะ =====
+ if(flyK>0&&pa>0&&aI<=0&&fo<.3&&amp>.3){
+  const cx=dragonG.position.x,cz=dragonG.position.z,ak=CL(amp,0,1.2);
+  for(const w of dWings){
+   w.mid.localToWorld(_wA.set(0,0,0));
+   const rg=wRings[wRI=(wRI+1)%WRN];rg.l=rg.L=.5+.15*ak;rg.s0=.8;rg.s1=3+ak*2.2;rg.op=.22+.12*ak;rg.vy=-2.2;
+   rg.m.position.set(_wA.x,Math.max(.15,_wA.y-.5),_wA.z);rg.m.visible=true;
+   if(flyY<6){   // บินต่ำ: เตะฝุ่นใต้ปีกฟุ้งออกด้านข้างตามแรงลม
+    let ox=_wA.x-cx,oz=_wA.z-cz;const ol=Math.hypot(ox,oz)||1;ox/=ol;oz/=ol;const gk=1-CL(flyY/6,0,1);
+    dust(_wA.x,_wA.z,Math.round(LP(1,5,gk)),ox*(3+8*gk),oz*(3+8*gk))}}
+ }
+ for(const rg of wRings){
+  if(rg.l>0){alive=true;rg.l-=dt;const q=CL(1-rg.l/rg.L,0,1),e=1-(1-q)*(1-q);
+   rg.m.scale.setScalar(LP(rg.s0,rg.s1,e));rg.m.position.y=Math.max(.12,rg.m.position.y+rg.vy*dt);
+   rg.mat.opacity=rg.op*Math.pow(1-q,1.5)*Math.min(1,q/.1+.0001);
+   if(rg.l<=0)rg.m.visible=false}
+ }
+ wAlive=alive;
+}
+function syncDragon(dt){
+ if(!dragonUnlocked)return;
+ kickT=Math.max(0,kickT-dt/.9);
+ const riding=ridingDragon;if(!riding)isBreathingFire=false;const firing=riding&&isBreathingFire&&!mountAnim;document.body.classList.toggle('firing',firing);
+ const rwy=(riding&&!mountAnim)||ridingWyvern;flyUI.style.display=rwy?'flex':'none';if(coarse)DB.style.display=rwy?'block':'none';document.body.classList.toggle('riding',riding||ridingWyvern);if(!riding&&!ridingWyvern){flyUp=false;flyDn=false;flySpr=false}
+ if(!riding)dragonYaw=dragonG.rotation.y;   // ตอนไม่ขี่ ใช้ทิศหัวมังกรเอง (หางจะแกว่งตามตอนมังกรเลี้ยว ไม่ใช่ตามกล้อง)
+ let dy=dragonYaw-lastDYaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));lastDYaw=dragonYaw;
+ turnS=DMP(turnS,CL(dt>0?dy/dt:0,-2.5,2.5),4,dt);
+ if(riding){
+  if(mountAnim)flyVy=0;
+  const targetPitch=(mountAnim||flyY<=.15)?0:CL(flyVy*.042,-.58,.45);   // ไต่ = เชิดหน้า ~25° / ดิ่ง = ก้มหัวปัก ~33° / ติดพื้น = 0
+  dragPitch=DMP(dragPitch,targetPitch,5.5,dt);
+  dragonG.position.set(mountAnim?mountAnim.dx:px,flyY,mountAnim?mountAnim.dz:pz);const bankAngle=turnS*CL(dragSpeed/21,.3,1.1)*.42*(1-wingFold);   // เอียงปีกด้านในโค้งลง (สูงสุด ~43° ตอนโฉบเร็ว) / อยู่พื้นไม่เอียง
+  dragBank=bankAngle;dragonG.rotation.set(dragPitch,dragonYaw,bankAngle,'YXZ')}   // ตอนลง: มังกรอยู่กับที่
+ else{flyVy=0;dragPitch=0;dragBank=0;
+  dragonG.rotation.set(0,dragonG.rotation.y,0,'YXZ');
+  if(mountAnim)dragSpeed=0;     // กำลังมีคนขึ้นขี่: มังกรยืนนิ่งรอ
+  else if(aiStep(dt)){}         // AI บินวน/ร่อนลง/วิ่งมารับ (คุมมังกรเอง) · ถ้าคืน false = เดินพื้นตามเดิม
+  else{
+  // ===== AI เดินเคียงข้างผู้เล่น สลับซ้าย-ขวา (ตอนไม่ได้ขี่) =====
+  const isPlayerMoving=Math.hypot(px-lastPx,pz-lastPz)>0.01;lastPx=px;lastPz=pz;   // ผู้เล่นก้าวเดินจริงหรือไม่
+  if(isPlayerMoving){                // เดินอยู่: อัปเดตทิศอ้างอิง + นับเวลาสลับฝั่ง (ยืนนิ่ง: คงทิศเดิม หยุดนับ ไม่เดินวนตามกล้อง)
+   followYaw=yaw;sideTimer-=dt;
+   if(sideTimer<=0){dragSide=-dragSide;sideTimer=R(6,12)}   // สลับฝั่งเป็นระยะ 6-12 วินาที (นับเฉพาะตอนผู้เล่นเดิน)
+  }
+  const fx=-Math.sin(followYaw),fz=-Math.cos(followYaw),rx=Math.cos(followYaw),rz=-Math.sin(followYaw);   // เวกเตอร์หน้า / ขวา อิงตาม followYaw
+  const sideX=sd=>px+rx*5.2*sd+fx*1.2,sideZ=sd=>pz+rz*5.2*sd+fz*1.2;               // จุดเป้าหมาย: เยื้องข้าง 5.2 + นำหน้า 1.2
+  const turnTo=(w,k)=>{let e=w-dragonG.rotation.y;e=Math.atan2(Math.sin(e),Math.cos(e));dragonG.rotation.y+=e*(1-Math.exp(-k*dt))};
+  let tx=sideX(dragSide),tz=sideZ(dragSide);
+  if(blocked(tx,tz)){                                      // ฝั่งนี้ติดสิ่งกีดขวาง → ลองสลับไปอีกฝั่งทันที
+   const ox=sideX(-dragSide),oz=sideZ(-dragSide);
+   if(!blocked(ox,oz)){dragSide=-dragSide;sideTimer=R(6,12);tx=ox;tz=oz}
+  }
+  const ddx=tx-dragonG.position.x,ddz=tz-dragonG.position.z,dist=Math.hypot(ddx,ddz);
+  const targetSpd=dist>14?6.2:dist>3.2?3.6:0;   // ความเร็วเป้าหมาย: ตามไม่ทัน 6.2 / เดินปกติ 3.6 / อยู่ใน deadzone 3.2 = หยุด
+  if(dist>32){                    // ไกลเกิน → วาร์ปมาที่จุดข้างตัว (ถ้าติดของ ใช้ dragonSpot())
+   const[wx,wz]=blocked(tx,tz)?dragonSpot():[tx,tz];
+   dragonG.position.x=wx;dragonG.position.z=wz;dragonG.rotation.y=followYaw;lastDYaw=followYaw;dragSpeed=0;
+  }else{
+   dragSpeed=DMP(dragSpeed,targetSpd,2.2,dt);   // ค่อยๆ เร่ง/ชะลอ ให้ดูตัวใหญ่หนักแน่น (ไม่พุ่งทันที ไม่หยุดทันที)
+   if(dragSpeed>.05&&dist>.01){    // กำลังก้าวเดินไปยังจุดข้างตัว
+    const st=Math.min(dist,dragSpeed*dt);
+    dragonG.position.x+=ddx/dist*st;dragonG.position.z+=ddz/dist*st;
+    turnTo(Math.atan2(-ddx,-ddz),3.2);   // หน้ามังกรอยู่ทาง -Z → เลี้ยวโค้งช้าๆ ตามทิศที่เดิน
+   }else{                          // หยุดแล้ว: หันตามทิศผู้เล่น + ชำเลืองมองผู้เล่นเป็นจังหวะ
+    if(!targetSpd||dist<=.01)dragSpeed=0;
+    turnTo(followYaw+dragSide*.45*(.5+.5*Math.sin(T*.7)),2.5);
+   }
+  }
+  }
+ }
+ const fH=riding?flyY:aiH,flying=riding||aiH>.1,onGnd=!flying||fH<=.1,walking=onGnd&&dragSpeed>0.05;   // fH = ความสูงมังกรจริง (ขี่ = flyY / ไม่ขี่ = aiH) · flying = ท่าบิน
+ wingFold=DMP(wingFold,onGnd?1-.5*groundRunK:0,5,dt);
+ sprintK=DMP(sprintK,(keys.ControlLeft||keys.KeyR||flySpr)&&riding&&!mountAnim&&!onGnd&&airSpd>2?1:0,5,dt);glideK=DMP(glideK,sprGlide&&sprintK>.3?1:0,6,dt);   // บินเร็ว (ใช้กับท่าปีก/ขา/คอ/ลม)
+ gaitAmt=DMP(gaitAmt,walking?1:0,8,dt);
+ if(walking)walkPhase+=dragSpeed*dt*1.4;
+ {const dDist=riding?0:Math.hypot(px-dragonG.position.x,pz-dragonG.position.z),wSt=Math.floor(walkPhase/Math.PI);
+  if(wSt!==syncDragon.lastWS){syncDragon.lastWS=wSt;if(walking&&groundRunK<.4)dragonGroundSfx.step(.65,dDist)}
+  if((syncDragon.roarT=(syncDragon.roarT||6)-dt)<=0){syncDragon.roarT=R(9,16);if(!firing)dragonGroundSfx.roar(false,dDist)}}
+ flightWindSfx(airSpd,flyVy,riding,onGnd);
+ groundRunK=DMP(groundRunK,onGnd&&riding&&!mountAnim&&dragSpeed>8.5?1:0,6,dt);if(groundRunK>.02)gaPh+=dt*dragSpeed*.52;if(groundRunK>.5){runSurgeT-=dt;if(runSurgeT<=0){runSurge=!runSurge;runSurgeT=R(1.4,2.2)}}else{runSurge=false;runSurgeT=R(1.4,2.2)}runSurgeK=DMP(runSurgeK,runSurge&&groundRunK>.5?1:0,4.5,dt);   // วิ่งควบเต็มฝีเท้า (เฟสควบแยกจากเฟสเดิน)
+ {const gF=Math.floor((gaPh-1.5708)/6.2832),gH=Math.floor((gaPh-4.7124)/6.2832),sy=Math.sin(dragonYaw),cy=Math.cos(dragonYaw);   // อุ้งเท้าหน้า/หลังกระแทกพื้น → เตะฝุ่น
+  if(gF!==nF){nF=gF;if(groundRunK>.5)dust(dragonG.position.x-sy*1.3,dragonG.position.z-cy*1.3,3,sy*6,cy*6)}
+  if(gH!==nH){nH=gH;if(groundRunK>.5)dust(dragonG.position.x+sy*1.4,dragonG.position.z+cy*1.4,4,sy*8,cy*8)}}
+ // ปีก: ไต่ = ถี่+แรง, ร่อนลง = กางนิ่งแทบไม่กระพือ, อยู่พื้น = พับขึ้นแนบหลัง
+ const vv=riding?flyVy:aiVy*1.5,bk=CL(-turnS/1.8,-1,1),climbK=flying?CL(vv/12,0,1):0,diveK=flying?CL(-vv/16,0,1):0;   // 0..1: ระดับท่าไต่ขึ้น / ท่าดิ่งลง (ได้จากความเร็วแนวดิ่ง จึงเปลี่ยนท่านุ่มนวล)
+ flapR=DMP(flapR,(flying?LP(LP(5.4,8.2,climbK),2.0,diveK):1.6)*LP(1,LP(1.45,.22,glideK),sprintK),4,dt);wingPh+=dt*flapR;
+ const amp0=flying?LP(LP(.85,.92,climbK),.06,diveK):.16,amp=LP(amp0,LP(amp0*1.22,.08,glideK),sprintK)*(1-.6*groundRunK),fo=wingFold,aI=wingA(wingPh),aO=wingA(wingPh-1.1);   // ไต่: กระพือแรง-กว้าง / ดิ่ง: กางค้างแทบนิ่ง
+ const wDown=Math.floor((wingPh-1.19)/6.2832);
+ if(wDown!==syncDragon.lastW){syncDragon.lastW=wDown;if(fo<.65&&amp>.18)dragonWingSfx(amp*(1-fo)*(1+climbK*.35+sprintK*.25),riding?0:Math.hypot(px-dragonG.position.x,pz-dragonG.position.z))}
+ // hoverK: 1 = ลอยอยู่กับที่กลางอากาศ → ค่อยๆ เป็น 0 ตอนพุ่งไปข้างหน้า/ลงจอด (กรองให้นุ่ม ไม่สลับท่ากระชาก)
+ hoverS=DMP(hoverS,flying&&fH>.1?(1-fo)*(1-CL(dragSpeed/12,0,1)):0,5,dt);const hoverK=hoverS;
+ const vI=(wingA(wingPh+.08)-wingA(wingPh-.08))*6.25,aE=wingA(wingPh-1.45);   // vI = ความเร็วปีก (กดลง<0 / ยกขึ้น>0) ใช้คิดแรงต้านอากาศ / aE = เฟสปลายแขนที่ตามหลังต้นแขนมากขึ้น
+for(const w of dWings){const s=w.s,f2=w.fo2=DMP(w.fo2||0,onGnd?1-.4*groundRunK:0,3.4,dt),ia=s*amp*aI*(1-fo);   // f2 = ระดับพับของท่อนนอก ตามหลังท่อนใน (กางออก: ต้นแขนเปิดก่อนแล้วปลายแขนคลี่ตาม / เก็บปีก: ต้นแขนพับก่อนแล้วปลายตามมา)
+ const iz=ia-.12*bk*(1-fo)+s*.55*fo+s*.14*diveK*(1-fo)+s*kickT*.1*Math.sin(T*18);w.inner.rotation.z=s*Math.min(.95,s*iz);   // จำกัดมุมยกสูงสุด ~.95 rad (ซ้าย ≤ +.95 / ขวา ≥ -.95) ไม่ให้ต้นแขนยกข้ามเส้นกลางลำตัวมาชนกัน
+ w.inner.rotation.y=-s*(1.35*fo+.42*diveK*(1-fo));   // ดิ่ง: ปีกหุบเข้าหาลำตัว+ลู่ไปด้านหลังตามแรงลม
+ const drag=-vI*amp*.38,rip=Math.sin(wingPh*2-1.9)*.07*amp;   // drag: กดปีกลง → ปลายแขนตวัดขึ้นสวนแรงอากาศ / ยกขึ้น → ห้อยตก · rip: คลื่นพริ้วถี่ 2 เท่า
+ w.outer.rotation.z=s*((amp*1.3*aE+drag+rip-.3*Math.max(0,aI)*amp)*(1-f2)-.36*f2+Math.sin(T*1.7+s*1.3)*.035*f2)-ia;   // พับเก็บ: ปลายแขนห้อยแนบหลัง + โยกเบาๆ ตามลมหายใจ
+ w.outer.rotation.y=-s*(1.3*f2+(.5*diveK+.12*Math.abs(drag))*(1-f2));w.root.scale.setScalar(1-.3*fo);skinWing(w)}
+ // ข้อต่อกลางหลัง: ไต่ = อกเชิดรับลม/สะโพกแอ่น · ดิ่ง = อกก้มนำ/สะโพกโก่งลู่ลม · กระพือปีก = อก-สะโพกขยับสวนแรงปีก · เลี้ยว = ลำตัวบิดงอตามโค้ง
+ dChest.rotation.x=.16*climbK-.18*diveK-aI*.045*(1-fo);dPelvis.rotation.x=-.14*climbK+.16*diveK+aI*.03*(1-fo);
+ dChest.rotation.x+=hoverK*(.12-aI*.09);dPelvis.rotation.x+=hoverK*(-.16+aI*.07);   // ลอยนิ่ง: อกเงยเชิดแล้วแอ่น-ก้มสวนจังหวะปีก / สะโพกห้อยถ่วงสมดุล
+ dChest.rotation.x-=.08*sprintK;dPelvis.rotation.x+=.06*sprintK;
+ dChest.rotation.x+=groundRunK*(-.11*Math.sin(gaPh-.3)-.06);dPelvis.rotation.x+=groundRunK*.14*Math.sin(gaPh+.5);   // วิ่งควบ: อกโน้มนำ+โก่ง-แอ่นเป็นคลื่นตามจังหวะถีบ/ตะปบ   // บินเร็ว: ลำตัวทอดราบลู่ลม
+ dChest.rotation.y=turnS*.04;dPelvis.rotation.y=-turnS*.05;dSaddle.rotation.x=(dChest.rotation.x+dPelvis.rotation.x)*.35;
+ for(const l of dLegs){const hind=l.p.position.z>0;   // ไต่: ขาหลังเหยียดไปด้านหลัง / ดิ่ง: ขาทั้ง 4 เก็บแนบใต้ท้อง
+  const hp=hind?-.55+aO*.14:-.95-aI*.1;   // ลอยนิ่ง: ขาหน้างอพับแนบใต้อก+กระตุกตามปีก / ขาหลังเหยียดเฉียงไปหลัง+แกว่งพยุงสลับจังหวะปีก
+  const gp=gaPh+(hind?Math.PI:0)+(l.p.position.x<0?0:.35),sn=Math.sin(gp),cs=Math.cos(gp),sw=.5+.5*Math.cos(gp-.35),gal=sn*(sn>0?(hind?.85:1.1):(hind?1.2:.9))+(hind?-.2:.12);   // sw = ช่วงลอยก้าวไปหน้า (Swing) / st = ช่วงอุ้งเท้าจิกพื้นถีบส่ง (Stance)   // วิ่งควบ: ขาคู่หน้าตะปบพร้อมกัน สลับคู่หลังถีบ · ซ้าย-ขวาเหลื่อม .35 rad
+  l.p.rotation.x=LP(LP(LP(Math.sin(walkPhase+l.ph)*.32*gaitAmt-.75*(hind?climbK:0)-1.25*diveK,gal,groundRunK),hp,hoverK),-1.35,sprintK);l.p.scale.setScalar(1-.28*Math.max(diveK,sprintK*.6));
+   l.knee.rotation.x=groundRunK*(-(hind?1.15:.95)*sw+.08);l.ankle.rotation.x=groundRunK*(-(hind?.65:.45)*sw+.18)}   // วิ่งควบ: Swing = เข่า-ข้อเท้าพับยกขาสูง / Stance = เหยียดตึงรับน้ำหนักและถีบ   // บินเร็ว: ขาทั้ง 4 พับเหยียดไปด้านหลังแนบใต้ลำตัว
+ dragonG.position.y=(riding?flyY:aiH)-aI*(flying?.25:.05)*(1-fo)-wingA(wingPh-.5)*.225*hoverK-mountDip+groundRunK*.09*(.5+.5*Math.sin(gaPh*2-.4));   // ลอยนิ่ง: ตัวปั๊มขึ้น-ลงรวม ~.45 หน่วย หน่วงเฟสตามหลังปีก
+ fireK=DMP(fireK,firing?1:0,9,dt);
+ const tk=1-.75*Math.max(diveK,sprintK);   // ดิ่ง: หางเหยียดตรงลู่ลม (แกว่งน้อยลง) / ไต่: หางกดต่ำลงช่วยต้านอากาศ
+ for(let i=0;i<dTailJ.length;i++){dTailJ[i].rotation.x=.04*climbK+Math.sin(wingPh-i*.45)*.055*hoverK+groundRunK*(-.04+(.018+.004*i)*Math.sin(gaPh-i*.22));dTailJ[i].rotation.y=hoverK*Math.sin(T*1.3-i*.6)*(.03+.012*i)+tk*(Math.sin(T*2.2-i*.7)*(.04+.028*i)*(1-gaitAmt)+gaitAmt*(1-groundRunK*.75)*Math.sin(walkPhase*.5-i*.6)*(.05+.04*i)+turnS*.018*(i+1)+kickT*Math.sin(T*12-i*.8)*.035*(i+1))}
+ // คอ 6 ปล้อง: S-Curve พื้นฐาน → บิน/ดิ่งยืดเหยียดลู่ลม (stretchK) / เดิน-ยืนเป็นคลื่นตามก้าว+หายใจ / บิดตามการเลี้ยว (turnS)
+ stretchS=DMP(stretchS,onGnd?(.25+.6*runSurgeK)*groundRunK:CL(dragSpeed/21*.45+diveK*.55+sprintK*.4,0,.95),4,dt);const stretchK=stretchS;
+ let neckSumX=0,neckSumY=0;
+ const aimYaw=Math.atan2(Math.sin(yaw-dragonYaw),Math.cos(yaw-dragonYaw));   // ส่วนต่างมุมหัน: ทิศกล้องเล็ง − ทิศลำตัวมังกร (+ = หันซ้าย)
+ aimYawS=DMP(aimYawS,firing?CL(aimYaw,-1.15,1.15):0,8,dt);   // พ่นไฟ: คอหันขวับไปตามเป้าอย่างนุ่ม (จำกัด ±65°) / หยุดพ่น: หันกลับตรง
+ for(let j=0;j<dNeckJ.length;j++){
+  const rx=BASE_NECK[j]*(1-stretchK)+.03*climbK*(1-diveK)+gaitAmt*Math.sin(walkPhase-j*.55)*.045+Math.sin(T*1.6-j*.45)*.025*(1-stretchK)+fireK*.03+aI*.025*hoverK+CL(pitch,-.5,.5)*.045*fireK-groundRunK*(.06-Math.sin(gaPh*2+.6-j*.3)*.008+.035*runSurgeK),   // เล็งขึ้นฟ้า/ลงพื้น: คอทุกปล้องเงย-ก้มตาม pitch เล็กน้อย
+   ry=turnS*.055*(1+j*.15)+Math.sin(T*1.1-j*.4)*.015*(1-gaitAmt)+aimYawS*.11*(1+j*.12);   // กระจายมุมหันลงแต่ละปล้อง (ปลายคอหันมากกว่าโคน)
+  dNeckJ[j].rotation.x=rx;dNeckJ[j].rotation.y=ry;dNeckJ[j].rotation.z=-turnS*.025+aimYawS*.05*(1+j*.1);neckSumX+=rx;neckSumY+=ry}
+ dHead.rotation.x=-neckSumX*LP(.72,.94,groundRunK)-aI*.025*hoverK+gaitAmt*(1-groundRunK*.85)*Math.sin(walkPhase-1.2)*.06-.2*fireK+CL(pitch,-.5,.5)*.5*fireK;   // หักล้างมุมคอ ให้หน้ามองตรงไปข้างหน้า
+ dHead.rotation.y=CL(turnS*.22,-.45,.45)-neckSumY*.25+aimYawS*.35;dHead.rotation.z=-turnS*.12+aimYawS*.1;   // หันหน้า+เอียงหัวนำทิศที่เลี้ยว
+ jawOpen=DMP(jawOpen,firing?.62:.04+Math.sin(T*1.3)*.015,12,dt);dJaw.rotation.x=-Math.max(jawOpen,.18*(mouthSmokeT/1.2));
+ dGlow.material.opacity=.12+.06*Math.sin(T*3)+.85*fireK;DWM.emissiveIntensity=.35+.9*fireK;   // คอเรืองแสง / พังผืดปีกโปร่งแสงโดนไฟ
+ for(const p of dPuffs){const f=(T*.7+p.ph)%1;p.m.position.set(p.x,.12+f*1.1,-1.9-f*.5);p.m.scale.setScalar(.2+f*.35);p.mat.opacity=.22*(1-f)}
+ if(dragonG.visible&&Math.random()<dt*(firing?30:10)){const s=Math.random()<.5?-1:1;_mp.set(s*.3,-.18,-1.55);dHead.localToWorld(_mp);spawnEmber(_mp)}
+ if(firing)fireFrame(dt);else fireOff(dt);
+ updFlame(dt);updEmb(dt);updScorch(dt);updMouthSmoke(dt);
+ updDragonWind(dt,riding,aI,amp,fo,climbK,diveK);   // เอฟเฟกต์ลมปีก: อัปเดตหลังท่าปีก/ลำตัวเสร็จ ใช้ค่ากระพือ-ไต่-ดิ่งชุดเดียวกัน
+}
+// พ่นไฟ: ระยะ 18, มุมหน้า ~53°, ดาเมจเผาไหม้ 3 ต่อศัตรู
+fireCd=0;
+
+// Guards + banners (plaza)
+// ---------- VILLAGE DETAILS + CITY KNIGHTS ----------
+const strawM=M(0xc8a040,1),ironM2=M(0x2a2a2e,.6,{metalness:.7}),plateM=M(0xb4b8c4,.28,{metalness:.9});
+const SO=new THREE.Object3D(),smokeM=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.35,0),new THREE.MeshBasicMaterial({color:0x8a8f99,transparent:true,opacity:.35,depthWrite:false}),chim.length*12);smokeM.frustumCulled=false;scene.add(smokeM);
+function updateVillage(T){flags.forEach((f,i)=>f.rotation.y=Math.sin(T*2.2+i*1.7)*.22);let n=0;
+ for(let c=0;c<chim.length;c++)for(let j=0;j<12;j++){const a=(T*.12+j/12+c*.37)%1;SO.position.set(chim[c].x+a*2.2+Math.sin(T+j)*.15,chim[c].y+a*6,chim[c].z+a*.8);SO.scale.setScalar(Math.sin(Math.PI*a)*(.6+a*1.8)+.01);SO.updateMatrix();smokeM.setMatrixAt(n++,SO.matrix)}
+ smokeM.instanceMatrix.needsUpdate=true}
+let last=performance.now(),T=0;
+// ---------- STAGE 1: EARTH WYVERN (ไวเวิร์นดิน) ----------
+function groundY(x,z){return 0}   // ไฟล์นี้ไม่มีฟังก์ชันความสูงพื้น (พื้นหญ้าเรียบ y=0) — ถ้ามี heightmap ภายหลัง แก้ตรงนี้
+const wyvernG=new THREE.Group();scene.add(wyvernG);
+const wyvP={};
+let wyvernState='HOSTILE',wyvernHp=300,wyvernMaxHp=300,wyvSaddle=null;   // 'HOSTILE' -> 'STAGGERED' -> 'TAMED'
+// ---------- NEW EARTH WYVERN MODEL (PRO V2: SLEEK PREDATOR BODY, CONTINUOUS SCALES, FORWARD-LEVELED HEAD) ----------
+function wyvernTex(mode){
+ const S=512,cv=document.createElement('canvas');cv.width=cv.height=S;
+ const g=cv.getContext('2d'),r=(sd=>()=>((sd=(sd*1664525+1013904223)>>>0)/4294967296))(mode==='bump'?77:mode==='lava'?99:44);
+ // เกล็ดขนาดละเอียดเรียงถี่ขึ้น (18 แถว) เพื่อให้ต่อเนื่องกับปล้องคอและหาง
+ const rad=24,dy=S/18;
+ if(mode==='bump'){
+  g.fillStyle='#242424';g.fillRect(0,0,S,S);
+  for(let y=-1;y<20;y++)for(let x=-1;x<13;x++){
+   const cx=x*2*rad+(y&1?rad:0),cy=y*dy+rad*.45;
+   const gr=g.createRadialGradient(cx,cy-rad*.3,2,cx,cy,rad*1.05);
+   gr.addColorStop(0,'#f4f4f4');gr.addColorStop(.72,'#828282');gr.addColorStop(1,'#181818');
+   g.fillStyle=gr;g.beginPath();g.moveTo(cx-rad,cy-rad*.55);g.lineTo(cx+rad,cy-rad*.55);g.lineTo(cx+rad*.76,cy+rad*.5);g.lineTo(cx,cy+rad*.9);g.lineTo(cx-rad*.76,cy+rad*.5);g.closePath();g.fill();
+   g.strokeStyle='#090909';g.lineWidth=1.8;g.stroke();
+  }
+ }else if(mode==='lava'){
+  g.fillStyle='#050100';g.fillRect(0,0,S,S);
+  for(let y=-1;y<20;y++)for(let x=-1;x<13;x++){
+   if(r()>.42)continue;
+   const cx=x*2*rad+(y&1?rad:0),cy=y*dy+rad*.45;
+   g.strokeStyle=r()<.35?'#ffb224':'#ff4206';g.lineWidth=1.4+r()*1.4;
+   g.beginPath();g.moveTo(cx-rad*.76,cy+rad*.5);g.lineTo(cx,cy+rad*.9);g.lineTo(cx+rad*.76,cy+rad*.5);g.stroke();
+  }
+ }else{
+  g.fillStyle='#1c1815';g.fillRect(0,0,S,S);
+  for(let y=-1;y<20;y++)for(let x=-1;x<13;x++){
+   const cx=x*2*rad+(y&1?rad:0),cy=y*dy+rad*.45,moss=r()<.22;
+   const gr=g.createRadialGradient(cx,cy-rad*.3,2,cx,cy,rad*1.1);
+   if(moss){gr.addColorStop(0,'#536e38');gr.addColorStop(1,'#27351a')}
+   else{const v=(56+r()*20)|0;gr.addColorStop(0,`rgb(${v+18},${v+13},${v+8})`);gr.addColorStop(1,`rgb(${v-18},${v-20},${v-22})`)}
+   g.fillStyle=gr;g.beginPath();g.moveTo(cx-rad,cy-rad*.55);g.lineTo(cx+rad,cy-rad*.55);g.lineTo(cx+rad*.76,cy+rad*.5);g.lineTo(cx,cy+rad*.9);g.lineTo(cx-rad*.76,cy+rad*.5);g.closePath();g.fill();
+   g.strokeStyle='#0b0806';g.lineWidth=1.5;g.stroke();
+  }
+ }
+ const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;
+ if(mode!=='bump'){if(THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;else t.encoding=THREE.sRGBEncoding}
+ return t;
+}
+const wyvTex=(m,rx,ry)=>{const t=wyvernTex(m);t.repeat.set(rx,ry);return t};
+
+// แยกสัดส่วน UV ของลำตัว (repeat 6x5) ให้ขนาดเกล็ดเท่ากับปล้องคอและหาง (repeat 2x1) ไร้รอยต่อ
+const EW_ST=new THREE.MeshStandardMaterial({color:0xffffff,map:wyvTex('rock',6,5),bumpMap:wyvTex('bump',6,5),bumpScale:1.55,roughness:.76,metalness:.14});
+const EW_MO=new THREE.MeshStandardMaterial({color:0x769450,map:wyvTex('rock',5,4),bumpMap:wyvTex('bump',5,4),bumpScale:1.2,roughness:.82,metalness:.06});
+const EW_LV=new THREE.MeshStandardMaterial({color:0xff7a18,map:wyvTex('lava',6,5),emissive:0xff4a00,emissiveMap:wyvTex('lava',6,5),emissiveIntensity:1.5,roughness:.45});
+const EW_SEG=new THREE.MeshStandardMaterial({color:0xffffff,map:wyvTex('rock',2,1),bumpMap:wyvTex('bump',2,1),bumpScale:1.4,roughness:.76,metalness:.14});
+const EW_HRN=new THREE.MeshStandardMaterial({color:0x17120f,bumpMap:wyvTex('bump',2,2),bumpScale:.8,roughness:.36,metalness:.42});
+const EW_WM=new THREE.MeshStandardMaterial({color:0x4a3324,map:wyvTex('rock',4,4),bumpMap:wyvTex('bump',4,4),bumpScale:.8,emissive:0x661a04,emissiveMap:wyvTex('lava',4,4),emissiveIntensity:.5,roughness:.75,side:THREE.DoubleSide});
+
+function createEarthWyvern(){
+ const g=wyvernG,P=wyvP,BX=new THREE.BoxGeometry(1,1,1);
+ while(g.children.length)g.remove(g.children[0]);
+
+ // 1) ลำตัวทรงเพรียวนักล่า (ลดความอ้วน 28%: อกกระชับ เอวคอด สะโพกเพรียวรับโคนหาง)
+ const torso=new THREE.Group();torso.position.set(0,1.02,0);g.add(torso);P.torso=torso;
+ const bodyPts=new THREE.SplineCurve([
+  new THREE.Vector2(0.01,-1.95),
+  new THREE.Vector2(0.38,-1.72),
+  new THREE.Vector2(0.68,-1.18),
+  new THREE.Vector2(0.74,-0.52),
+  new THREE.Vector2(0.55,0.28),
+  new THREE.Vector2(0.47,0.98),
+  new THREE.Vector2(0.35,1.52),
+  new THREE.Vector2(0.01,1.76)
+ ]).getPoints(40);
+ const bodyGeo=new THREE.LatheGeometry(bodyPts,24);
+ bodyGeo.rotateX(Math.PI/2);
+ const bodyMesh=new THREE.Mesh(bodyGeo,EW_ST);
+ bodyMesh.scale.set(0.96,0.88,1);
+ torso.add(bodyMesh);
+
+ // กล้ามเนื้ออกและแผ่นเกล็ดท้องทรงเพรียว
+ mk(SPH,EW_ST,torso,0,-.04,-1.32,[.62,.56,.64]);
+ for(let i=0;i<9;i++){
+  const z=-1.32+i*.34,t=i/8,r=LP(.62,.36,t);
+  mk(SPH,i%2?EW_MO:EW_ST,torso,0,-r*.82,z,[r*.58,.09,.20]);
+ }
+
+ // แผ่นเกราะหลัง + ครีบหินสันหลังทรงใบมีด
+ for(let i=0;i<8;i++){
+  const z=-1.32+i*.39,k=1-i*.07;
+  mk(SPH,i%3===0?EW_MO:EW_ST,torso,0,.58*k,z,[.36*k,.14,.25],[-.14,0,0]);
+  mk(CONE,EW_HRN,torso,0,.72*k,z+.04,[.07,.38*k,.20],[.28,0,0]);
+ }
+
+ // ร่องลาวาเรืองแสงแนบสีข้าง
+ for(const s of[-1,1]){
+  limb(torso,EW_LV,[s*.69,.12,-.68],[s*.52,.09,.62],.026,.018,5);
+  limb(torso,EW_LV,[s*.42,.26,-1.35],[s*.68,.14,-.68],.026,.020,5);
+  limb(torso,EW_LV,[s*.56,-.12,-.95],[s*.46,-.10,.35],.020,.015,4);
+ }
+
+ // 2) คอ 6 ปล้องโค้ง S-Curve พุ่งไปข้างหน้า (ใช้ EW_SEG ให้เกล็ดขนาดต่อเนื่องกับลำตัว)
+ const neck=new THREE.Group();neck.position.set(0,.20,-1.52);torso.add(neck);P.neck=neck;
+ const NJ=chain(neck,-1,[.40,.37,.34,.31,.28,.25],[.40,.38,.36,.35,.34],EW_SEG,EW_HRN);
+ const BASE_WYV_NECK=[.11,.09,.07,.05,.04,.03]; // โคนคอเชิดสูงขึ้นสง่าและโค้งรับหัวที่เงยขึ้น
+ NJ.forEach((j,i)=>{
+  j.rotation.x=BASE_WYV_NECK[i];
+  for(const s of[-1,1]){
+   mk(SPH,EW_SEG,j,s*(.30-i*.02),.02,-.18,[.10,.12,.16]);
+   mk(SPH,EW_LV,j,s*(.32-i*.02),-.02,-.18,[.024,.024,.14]);
+  }
+ });
+ P.neckJ=NJ;
+
+ // 2.1) หัวทรงลิ่มนักล่า (ตั้งมุมพื้นฐานให้งุ้มมองตรงไปข้างหน้า ไม่เชิดขึ้นฟ้า)
+ const head=new THREE.Group();head.position.set(0,-.01,-.32);NJ[NJ.length-1].add(head);P.head=head;
+ mk(SPH,EW_SEG,head,0,.04,-.18,[.38,.31,.48]);
+ mk(new THREE.CylinderGeometry(.15,.38,1.04,4),EW_SEG,head,0,-.02,-.80,[1,1,.62],[-Math.PI/2,0,0]);
+ mk(SPH,EW_MO,head,0,.20,-.30,[.25,.09,.32]);
+
+ const eyeMat=new THREE.MeshStandardMaterial({color:0xffb830,emissive:0xff5a00,emissiveIntensity:2.3,roughness:.2});
+ for(const s of[-1,1]){
+  mk(SPH,EW_HRN,head,s*.24,.22,-.40,[.17,.07,.34],[0,s*.12,s*.35]);
+  mk(SPH,eyeMat,head,s*.28,.11,-.44,[.066,.062,.088]);
+  mk(SPH,EW_HRN,head,s*.34,.11,-.44,[.011,.054,.020]);
+  // เขาหลักโค้งลู่ไปด้านหลัง
+  const hp=[];for(let i=0;i<7;i++){const t=i/6;hp.push([s*(.20+.44*t),.22+.18*t+.32*t*t,-.05+1.0*t])}
+  for(let i=0;i<6;i++)limb(head,EW_HRN,hp[i],hp[i+1],.085*(1-i/6)+.016,.085*(1-(i+1)/6)+.016,6);
+  // หนามข้างแก้ม + แผงครีบหลังศีรษะ
+  for(let k=0;k<3;k++)mk(CONE,EW_HRN,head,s*(.33-.02*k),-.03-.04*k,-.12-k*.20,[.05,.25-.04*k,.05],[.5,0,-s*1.15]);
+  for(let k=0;k<3;k++)mk(CONE,EW_HRN,head,s*.20,.14,.16+k*.1,[.032,.44-.07*k,.18],[0,0,-s*(.65+k*.2)]);
+ }
+ // สันหนามกลางจมูก
+ for(let k=0;k<3;k++)mk(CONE,EW_HRN,head,0,.23-.035*k,-.64-k*.17,[.032,.20-.03*k,.13],[.35,0,0]);
+
+ // ขากรรไกรล่างแยกชิ้น + เขี้ยวบน-ล่าง
+ const jaw=new THREE.Group();jaw.position.set(0,-.13,-.28);head.add(jaw);P.jaw=jaw;
+ mk(new THREE.CylinderGeometry(.11,.31,.98,4),EW_SEG,jaw,0,-.04,-.54,[1,1,.52],[-Math.PI/2,0,0]);
+ mk(SPH,EW_MO,jaw,0,-.12,-.34,[.20,.045,.40]);
+ for(const s of[-1,1])mk(CONE,EW_HRN,jaw,s*.20,-.06,-.14,[.036,.20,.036],[.8,0,-s*.7]);
+ for(let i=0;i<6;i++)for(const s of[-1,1]){
+  const z=-.50-i*.115,w=.33-(-z-.42)/1.02*.18,big=i%2===0;
+  mk(CONE,DTH,head,s*w*.82,-.04-w*.40,z,[.028,big?.15:.075,.028],[Math.PI,0,0]);
+  mk(CONE,DTH,jaw,s*w*.82,-.04+w*.24,z+.30,[.028,big?.075:.15,.028]);
+ }
+
+ // 3) ขาหน้า/ปีกพับกระชับกับลำตัวที่เพรียวลง
+ const toe=(p,s,x,y,z,dx,len,w)=>{
+  const tx=x+dx*s,tz=z-len;
+  limb(p,EW_SEG,[x,y,z],[tx,y-.01,tz],w,w*.7,5);
+  mk(SPH,EW_SEG,p,x+dx*s*.5,y,z-len*.5,[w*1.15,w*.9,w*1.15]);
+  mk(CONE,EW_HRN,p,tx,y-.035,tz-.07,[w*.9,.20,w*.9],[-Math.PI/2-.55,0,0]);
+ };
+ const wingMemShape=new THREE.Shape();
+ wingMemShape.moveTo(.14,-.16);
+ wingMemShape.lineTo(.40,.30);
+ wingMemShape.lineTo(.86,-.36);
+ wingMemShape.quadraticCurveTo(.68,-.44,.72,-.70);
+ wingMemShape.quadraticCurveTo(.50,-.72,.48,-.92);
+ wingMemShape.quadraticCurveTo(.33,-.86,.31,-.96);
+ wingMemShape.lineTo(.14,-.16);
+ const wingMemGeo=new THREE.ShapeGeometry(wingMemShape,8);
+
+ for(const s of[-1,1]){
+  const W=new THREE.Group();W.position.set(s*.64,.10,-.72);torso.add(W);P[s<0?'wingL':'wingR']=W;
+  mk(SPH,EW_SEG,W,s*.05,-.02,0,[.34,.34,.40]);
+  mk(SPH,EW_MO,W,s*.14,.15,-.02,[.26,.12,.30],[0,0,s*.35]);
+  const elb=[s*.40,.30,.14],wri=[s*.31,-.96,-.42];
+  limb(W,EW_SEG,[0,0,0],elb,.19,.14,8);
+  mk(SPH,EW_SEG,W,elb[0],elb[1],elb[2],[.17,.17,.19]);
+  mk(CONE,EW_HRN,W,elb[0]+s*.04,elb[1]+.19,elb[2]+.06,[.068,.32,.068],[-.35,0,-s*.25]);
+  limb(W,EW_SEG,elb,wri,.15,.11,8);
+  mk(SPH,EW_SEG,W,s*.35,-.32,-.15,[.16,.25,.17],[.2,0,0]);
+  limb(W,EW_LV,[s*.27,.11,.04],[s*.38,-.46,-.20],.022,.017,4);
+  [[s*.86,-.36,.90,.050],[s*.72,-.70,.78,.042],[s*.48,-.92,.54,.035]].forEach(([fx,fy,fz,r0])=>{
+   limb(W,EW_HRN,elb,[fx,fy,fz],r0,.015,5);
+  });
+  const mem=new THREE.Mesh(wingMemGeo,EW_WM);
+  mem.scale.x=s;mem.rotation.y=-s*.42;mem.position.set(0,0,.04);
+  W.add(mem);
+  mk(SPH,EW_SEG,W,wri[0],wri[1]-.02,wri[2]-.04,[.16,.095,.21]);
+  toe(W,s,wri[0],wri[1]-.03,wri[2]-.12,-.10,.30,.050);
+  toe(W,s,wri[0],wri[1]-.03,wri[2]-.14,0,.36,.056);
+  toe(W,s,wri[0],wri[1]-.03,wri[2]-.12,.10,.30,.050);
+ }
+
+ // 4) ขาหลังกำยำรับสะโพกเพรียว
+ for(const s of[-1,1]){
+  const L=new THREE.Group();L.position.set(s*.48,.60,.96);g.add(L);P[s<0?'legL':'legR']=L;
+  mk(SPH,EW_SEG,L,s*.08,-.05,-.10,[.32,.34,.40]);
+  limb(L,EW_SEG,[0,-.02,0],[s*.24,-.22,-.46],.30,.19,9);
+  mk(SPH,EW_SEG,L,s*.14,-.11,-.20,[.28,.26,.34]);
+  mk(SPH,EW_MO,L,s*.27,-.02,-.14,[.17,.22,.28],[0,0,s*.3]);
+  limb(L,EW_LV,[s*.30,-.02,-.40],[s*.30,-.22,-.12],.024,.018,4);
+  mk(SPH,EW_SEG,L,s*.24,-.22,-.46,[.20,.20,.20]);
+  mk(CONE,EW_HRN,L,s*.27,-.18,-.62,[.06,.22,.06],[-Math.PI/2+.3,0,0]);
+  limb(L,EW_SEG,[s*.24,-.22,-.46],[s*.07,-.48,-.04],.19,.12,8);
+  mk(SPH,EW_SEG,L,s*.15,-.32,-.19,[.16,.24,.17],[-.5,0,0]);
+  mk(SPH,EW_SEG,L,s*.07,-.48,-.04,[.13,.13,.13]);
+  mk(CONE,EW_HRN,L,s*.07,-.44,.13,[.055,.24,.055],[Math.PI/2-.3,0,0]);
+  limb(L,EW_SEG,[s*.07,-.48,-.04],[s*.07,-.56,-.36],.12,.09,7);
+  mk(SPH,EW_SEG,L,s*.07,-.57,-.40,[.16,.075,.21]);
+  toe(L,s,s*.07,-.57,-.48,-.10,.30,.052);
+  toe(L,s,s*.07,-.57,-.50,0,.36,.058);
+  toe(L,s,s*.07,-.57,-.48,.10,.30,.052);
+ }
+
+ // 5) หาง 7 ปล้อง + ตุ้มกระบองหินหนาม (ใช้ EW_SEG ให้เกล็ดขนาดเท่าลำตัวและคอ)
+ const tail=new THREE.Group();tail.position.set(0,.02,1.56);torso.add(tail);P.tail=tail;
+ const TJ=chain(tail,1,[.35,.31,.27,.23,.19,.15,.12],[.56,.54,.52,.50,.48,.46],EW_SEG,EW_HRN);
+ TJ.forEach((j,i)=>{
+  j.rotation.x=-.035*i;
+  if(i%2===0)mk(SPH,EW_LV,j,0,-.10+i*.01,.24,[.065-.006*i,.026,.15]);
+ });
+ const mace=new THREE.Group();mace.position.set(0,0,.52);TJ[TJ.length-1].add(mace);
+ mk(SPH,EW_SEG,mace,0,0,0,[.27,.24,.31]);
+ mk(SPH,EW_MO,mace,0,.13,-.04,[.18,.11,.20]);
+ mk(CONE,EW_HRN,mace,0,0,.42,[.13,.40,.13],[Math.PI/2,0,0]);
+ for(let a=0;a<6;a++){
+  const ang=a*Math.PI/3;
+  mk(CONE,EW_HRN,mace,Math.cos(ang)*.22,Math.sin(ang)*.22,.04,[.075,.26,.075],[0,0,ang-Math.PI/2]);
+ }
+
+ // 6) อานขี่เหล็ก-หนังรับกับแผ่นหลังที่เพรียวลง
+ wyvSaddle=new THREE.Group();wyvSaddle.visible=wyvernState==='TAMED';torso.add(wyvSaddle);
+ {const LT=new THREE.MeshStandardMaterial({color:0x5c381c,bumpMap:wyvTex('bump',2,2),bumpScale:.8,roughness:.78}),
+   MT=new THREE.MeshStandardMaterial({color:0xc89e44,roughness:.35,metalness:.7});
+  mk(BX,LT,wyvSaddle,0,.68,.12,[.64,.10,.96]);
+  mk(BX,LT,wyvSaddle,0,.80,.58,[.56,.18,.13]);
+  mk(BX,LT,wyvSaddle,0,.78,-.34,[.40,.14,.11]);
+  mk(CONE,MT,wyvSaddle,0,.89,-.34,[.07,.16,.07]);
+  for(const s of[-1,1]){
+   mk(BX,LT,wyvSaddle,s*.53,.36,.12,[.07,.70,.16],[0,0,s*.28]);
+   mk(SPH,MT,wyvSaddle,s*.50,.04,.12,[.08,.08,.08]);
+  }}
+
+ g.scale.setScalar(2.25);
+ g.position.set(-65,groundY(-65,-90),-90);
+ return g;
+}
+createEarthWyvern();
+// แอนิเมชันพื้นฐาน: คุมมุมคอ S-Curve + กดหัวมองตรงระดับสายตา (แก้ปัญหาหัวเชิดขึ้น)
+function updateEarthWyvern(dt,t){
+ const s=Math.sin(t*1.5),P=wyvP;
+ P.torso.scale.set(1+.014*s,1+.026*s,1+.014*s);P.torso.position.y=.05+1*P.torso.scale.y;
+ P.neck.rotation.x=.14+.03*s;
+ let sumX=P.neck.rotation.x;
+ P.neckJ.forEach((j,i)=>{
+  const rx=BASE_WYV_NECK[i]+.018*Math.sin(t*1.5-i*.55);
+  j.rotation.x=rx;
+  sumX+=rx;
+ });
+ // เงยหัวเชิดขึ้นรับกับลำคอในท่า Idle (ไม่กดหัวลง)
+ P.head.rotation.x=-sumX*0.35+0.14+0.04*s;
+ P.tail.rotation.x=.08*s;
+ P.wingL.rotation.z=.03*s;P.wingR.rotation.z=-.03*s;
+}
+// ---------- EARTH WYVERN QUEST + WAYPOINT ARROW ----------
+let wyvernQuest='NONE';   // 'NONE' -> 'ACTIVE' -> 'COMPLETED' (ตั้ง wyvernState==='TAMED' ในอนาคตเพื่อจบเควสอัตโนมัติ หรือเรียก completeWyvernQuest())
+const questBox=document.createElement('div');
+questBox.style.cssText='position:fixed;z-index:5;left:12px;top:calc(env(safe-area-inset-top,0px) + 10px);background:#1b1610cc;color:var(--ac);border:1px solid var(--ac);border-radius:6px;padding:6px 10px;font:inherit;font-size:13px;line-height:1.5;max-width:200px;-webkit-user-select:none;user-select:none';
+const questTxt=document.createElement('div'),questBtn=document.createElement('button');
+questBtn.style.cssText='display:block;margin-top:4px;background:var(--ac);color:#1b1610;border:0;border-radius:5px;padding:6px 10px;font:inherit;font-size:13px';
+questBtn.textContent='รับเควสไวเวิร์นดิน';questBox.append(questTxt,questBtn);document.body.appendChild(questBox);
+let questShown='';
+function renderQuestUI(txt){
+ const s=wyvernQuest==='NONE'?'📜 เควสล่า: ไวเวิร์นดิน (ป่าตะวันตกเฉียงเหนือ)':wyvernQuest==='ACTIVE'?txt:'✅ เควสไวเวิร์นดินสำเร็จ!';
+ if(s!==questShown){questShown=s;questTxt.textContent=s}
+ questBtn.style.display=wyvernQuest==='NONE'?'block':'none';
+}
+questBtn.addEventListener('click',()=>{if(wyvernQuest==='NONE'){wyvernQuest='ACTIVE';renderQuestUI('')}});
+function completeWyvernQuest(){if(wyvernQuest!=='ACTIVE')return;wyvernQuest='COMPLETED';renderQuestUI();setTimeout(()=>{questBox.style.display='none'},5000)}
+const questArrowG=new THREE.Group();questArrowG.visible=false;scene.add(questArrowG);
+{const m=new THREE.MeshStandardMaterial({color:0xffaa00,emissive:0xffaa00,emissiveIntensity:.8,roughness:.4,fog:false});
+ const cone=new THREE.Mesh(new THREE.ConeGeometry(.28,.8,12),m);cone.rotation.x=Math.PI/2;cone.position.z=.4;
+ const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.55,10),m);shaft.rotation.x=Math.PI/2;shaft.position.z=-.15;
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.32,.04,8,20),new THREE.MeshBasicMaterial({color:0xffaa00,fog:false}));ring.position.z=-.5;
+ for(const o of[cone,shaft,ring]){o.castShadow=false;questArrowG.add(o)}}
+function updateWyvernQuest(dt,t){
+ if(wyvernQuest==='ACTIVE'&&typeof wyvernState!=='undefined'&&wyvernState==='TAMED')completeWyvernQuest();
+ const wx=wyvernG.position.x,wz=wyvernG.position.z,d=Math.hypot(wx-px,wz-pz);
+ if(wyvernQuest==='ACTIVE')renderQuestUI('🐲 ตามหาไวเวิร์นดิน · '+Math.round(d)+' m');
+ const show=wyvernQuest==='ACTIVE'&&d>12;questArrowG.visible=show;
+ if(!show)return;
+ const r=ridingDragon?4.5:2.8,by=(ridingDragon?flyY:groundY(px,pz))+1.8+Math.sin(t*3)*.12;
+ questArrowG.position.set(px-Math.sin(yaw)*r,by,pz-Math.cos(yaw)*r);
+ questArrowG.lookAt(wx,by,wz);   // +z ของกลุ่ม = ปลายลูกศร
+}
+// ---------- STAGE 2: WYVERN COMBAT / TAMING ----------
+let wyvAct='WALK',wyvActT=0,wyvCd=1.5,wyvHit=false,wyvChDir=0,wyvPh=0,wyvUp=0,wyvDip=0,wyvCr=0,wyvWalk=0,wyvHitT=0,wyvFollow=false;
+const _wbv=new V3();
+const wyvBar=document.createElement('div');wyvBar.style.cssText='position:fixed;z-index:5;left:0;top:0;width:96px;height:10px;border:1px solid #000;background:#2a1a12cc;border-radius:5px;display:none;transform:translate(-50%,-50%);pointer-events:none;overflow:hidden';
+const wyvFill=document.createElement('div');wyvFill.style.cssText='height:100%;width:100%;background:linear-gradient(#ff6a3a,#b01e12);transition:width .15s';wyvBar.appendChild(wyvFill);document.body.appendChild(wyvBar);
+const wyvGlow=new THREE.Mesh(SPH,new THREE.MeshBasicMaterial({color:0xffc850,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+wyvGlow.visible=false;wyvGlow.castShadow=false;wyvGlow.position.set(0,1,.1);wyvGlow.scale.set(1,.45,1.3);wyvP.torso.add(wyvGlow);
+const WRING=[];for(let i=0;i<3;i++){const m=new THREE.Mesh(RING_G,new THREE.MeshBasicMaterial({color:0xc9a063,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));m.rotation.x=Math.PI/2;m.visible=false;m.castShadow=false;scene.add(m);WRING.push({m,s:1,x:0,z:0})}   // พูลวงคลื่นกระแทกแยกจาก RINGS (RINGS ถูก fireOff() รีเซ็ตทุกเฟรม)
+function wyvHurtPlayer(ox,oz,force,msg){   // กระเด็นเฉพาะตอนเดินเท้า · กลิ้งหลบ (dashT>0) = หลบพ้น
+ if(ridingDragon||dashT>0)return false;
+ let ax=px-ox,az=pz-oz;const l=Math.hypot(ax,az)||1;pkx=ax/l*force;pkz=az/l*force;shk=Math.max(shk,.8);shout(msg,1800);return true}
+function wyvSlam(ry){
+ const fx=-Math.sin(ry),fz=-Math.cos(ry),cx=wyvernG.position.x+fx*8,cz=wyvernG.position.z+fz*8;
+ shk=Math.max(shk,.8);
+ for(let i=0;i<3;i++){const r=WRING[i];r.s=-i*.12;r.x=cx;r.z=cz}
+ for(let i=0;i<14;i++){const a=i/14*6.283;dust(cx+Math.cos(a)*3,cz+Math.sin(a)*3,3,Math.cos(a)*5,Math.sin(a)*5)}
+ if(Math.hypot(px-cx,pz-cz)<14)wyvHurtPlayer(cx,cz,42,'💥 ทุบปฐพี! แรงกระแทกสะเทือน!')}
+function wyvStagger(){
+ wyvernHp=0;wyvernState='STAGGERED';wyvAct='WALK';wyvHitT=0;setFlash(wyvernG,false);shk=Math.max(shk,1);
+ for(let i=0;i<10;i++)dust(wyvernG.position.x+R(-4,4),wyvernG.position.z+R(-4,4),2);
+ shout('⚡ ไวเวิร์นหมดแรง! เข้าใกล้แล้วกดค้าง E เพื่อสยบ',3500)}
+function tameWyvern(){
+ wyvernState='TAMED';wyvAct='WALK';wyvSaddle.visible=true;wyvFollow=false;completeWyvernQuest();
+ shout('🪨 สยบไวเวิร์นดินสำเร็จ! กลายเป็นอสูรรับใช้แล้ว',3500)}
+
+// ===== STAGE 3: ขี่ไวเวิร์นดิน =====
+let ridingWyvern=false,wyvernYaw=0,wyvRideSpd=0,wyvSkillCd=0,wyvSlamAnim=0,wyvSlamHit=true,wyvCamK=0;
+function mountWyvern(){ridingWyvern=true;wyvernYaw=wyvernG.rotation.y;yaw=wyvernYaw;wyvFollow=false;wyvRideSpd=0;px=wyvernG.position.x;pz=wyvernG.position.z;
+ shout('🐲 ขึ้นขี่ไวเวิร์นดิน! W/S เดิน · A/D เลี้ยว · Ctrl/R พุ่งชน · J/คลิก ทุบปฐพี · G ลง',3500)}
+function dismountWyvern(){if(!ridingWyvern)return;
+ const wx=wyvernG.position.x,wz=wyvernG.position.z,c=Math.cos(wyvernYaw),sn=Math.sin(wyvernYaw);let ok=false;
+ for(const sd of[1,-1]){for(const r of[5.5,7,9]){const nx=wx+c*sd*r,nz=wz-sn*sd*r;if(!blocked(nx,nz)){px=nx;pz=nz;ok=true;break}}if(ok)break}
+ if(!ok){px=wx-Math.sin(wyvernYaw)*7;pz=wz-Math.cos(wyvernYaw)*7}
+ ridingWyvern=false;wyvRideSpd=0;wyvFollow=false;shout('ลงจากไวเวิร์นดินแล้ว',1500)}
+function wyvernRideMove(dt,f,s){
+ wyvernYaw-=s*1.45*dt;
+ const spr=(keys.ControlLeft||keys.KeyR||flySpr)&&f>.05;
+ wyvRideSpd=DMP(wyvRideSpd,f*(spr?11.5:5.5),spr?3:7,dt);
+ const fx=-Math.sin(wyvernYaw),fz=-Math.cos(wyvernYaw),sg=wyvRideSpd<0?-1:1,nx=px+fx*wyvRideSpd*dt,nz=pz+fz*wyvRideSpd*dt;
+ const ok=(x,z)=>!blocked(x,z)&&!blocked(x+fx*3.6*sg,z+fz*3.6*sg);
+ if(ok(nx,nz)){px=nx;pz=nz}else if(ok(nx,pz))px=nx;else if(ok(px,nz))pz=nz;
+ else{if(wyvRideSpd>8){shk=Math.max(shk,.5);dust(px+fx*6,pz+fz*6,8,fx*3,fz*3)}wyvRideSpd*=.2}
+ if(spr&&wyvRideSpd>8){shk=Math.max(shk,.18);dust(px-fx*3,pz-fz*3,2,-fx*3,-fz*3)}}
+function wyvSlamStart(){if(!ridingWyvern||wyvSkillCd>0||wyvSlamAnim>0)return;wyvSkillCd=2.2;wyvSlamAnim=.45;wyvSlamHit=false}
+function wyvSlamImpact(){
+ const ry=wyvernG.rotation.y,cx=wyvernG.position.x-Math.sin(ry)*7,cz=wyvernG.position.z-Math.cos(ry)*7;
+ shk=Math.max(shk,.85);for(let i=0;i<3;i++){const r=WRING[i];r.s=-i*.12;r.x=cx;r.z=cz}
+ for(let i=0;i<18;i++){const a=i/18*6.283;dust(cx+Math.cos(a)*3.5,cz+Math.sin(a)*3.5,3,Math.cos(a)*6,Math.sin(a)*6)}
+ dust(cx,cz,10);dragonGroundSfx.step(1.35,0)}
+
+function updateWyvernAI(dt,t){
+ const g=wyvernG,P=wyvP,wx=g.position.x,wz=g.position.z,dxp=px-wx,dzp=pz-wz,d=Math.hypot(dxp,dzp),st=wyvernState;
+ let ry=g.rotation.y,speed=0,upT=0,dipT=0,crT=0,upRate=4,moved=0;
+ const turnTo=(tx,tz,rate)=>{let df=Math.atan2(-tx,-tz)-ry;df=Math.atan2(Math.sin(df),Math.cos(df));ry+=CL(df,-rate*dt,rate*dt)};
+ const tryMove=(vx,vz,fx,fz)=>{const nx=g.position.x+vx*dt,nz=g.position.z+vz*dt,ox=g.position.x,oz=g.position.z,
+  ok=(x,z)=>!blocked(x,z)&&!blocked(x+fx*3.6,z+fz*3.6);
+  if(ok(nx,nz)){g.position.x=nx;g.position.z=nz;return 1}
+  if(ok(nx,oz)){g.position.x=nx;return 1}if(ok(ox,nz)){g.position.z=nz;return 1}return 0};
+ if(wyvHitT>0){wyvHitT-=dt;if(wyvHitT<=0)setFlash(g,false)}
+ wyvSkillCd=Math.max(0,wyvSkillCd-dt);if(wyvSlamAnim>0){wyvSlamAnim=Math.max(0,wyvSlamAnim-dt);if(!wyvSlamHit&&wyvSlamAnim<=.225){wyvSlamHit=true;wyvSlamImpact()}}
+ if(st==='HOSTILE'){
+  wyvCd=Math.max(0,wyvCd-dt);
+  if(wyvAct==='WALK'){
+   if(d<60){turnTo(dxp,dzp,1.1);if(d>9)speed=3.2;
+    if(wyvCd<=0&&(!ridingDragon||flyY<6)){
+     if(d<11){wyvAct='SLAM_W';wyvActT=0;shout('⚠️ ไวเวิร์นกำลังง้างทุบ!',1200)}
+     else if(d<=28){wyvAct='CHARGE_W';wyvActT=0;shout('⚠️ ไวเวิร์นกำลังจะพุ่งชน!',1200)}}}
+  }else if(wyvAct==='SLAM_W'){
+   wyvActT+=dt;upT=1;turnTo(dxp,dzp,.5);
+   if(wyvActT>=1.2){wyvSlam(ry);wyvAct='RECOVER';wyvActT=0;wyvCd=2.2;wyvUp=1;upRate=18}
+  }else if(wyvAct==='CHARGE_W'){
+   wyvActT+=dt;dipT=1;turnTo(dxp,dzp,.9);
+   if(wyvActT>=1.2){wyvAct='CHARGE';wyvActT=0;wyvHit=false;wyvChDir=ry}
+  }else if(wyvAct==='CHARGE'){
+   wyvActT+=dt;ry=wyvChDir;speed=9.5;dipT=.6;
+   const fx=-Math.sin(ry),fz=-Math.cos(ry);
+   if(!wyvHit)for(const o of[3,8]){const hx=wx+fx*o,hz=wz+fz*o;
+    if(Math.hypot(px-hx,pz-hz)<4.5&&wyvHurtPlayer(hx,hz,60,'🪨 ถูกไวเวิร์นพุ่งชน!')){wyvHit=true;break}}
+   if(Math.random()<dt*20)dust(wx+R(-2,2),wz+R(-2,2),1,-fx*3,-fz*3);
+   if(wyvActT>=1.4){wyvAct='RECOVER';wyvActT=0;wyvCd=2.5}
+  }else{wyvActT+=dt;if(wyvActT>=.9)wyvAct='WALK'}   // RECOVER
+ }else if(st==='STAGGERED'){crT=1}
+ else if(st==='TAMED'&&!ridingWyvern){
+  if(d>9.5)wyvFollow=true;else if(d<=8)wyvFollow=false;
+  if(wyvFollow){turnTo(dxp,dzp,1.4);speed=d>30?7:3.2}
+  else if(d<6){const l=d||1,fx=-Math.sin(ry),fz=-Math.cos(ry);   // ใกล้เกิน: ถอยออกช้าๆ ไม่ให้ชนตัวผู้เล่น
+   if(tryMove(-dxp/l*2.5,-dzp/l*2.5,fx,fz))moved=1}
+  else turnTo(dxp,dzp,.5)}
+ g.rotation.y=ry;
+ if(speed>0){const fx=-Math.sin(ry),fz=-Math.cos(ry);
+  if(tryMove(fx*speed,fz*speed,fx,fz)){moved=1;wyvPh+=dt*speed}
+  else if(wyvAct==='CHARGE'){wyvAct='RECOVER';wyvActT=-.6;wyvCd=2.5;shk=Math.max(shk,.5);dust(wx+fx*7,wz+fz*7,8,fx*3,fz*3)}}   // พุ่งชนสิ่งกีดขวาง → มึน
+ g.position.y=groundY(g.position.x,g.position.z);
+ // ---- ท่าทาง (ทับผลของ updateEarthWyvern) ----
+ if(ridingWyvern){const a=Math.abs(wyvRideSpd);moved=a>.3?1:0;wyvPh+=dt*a*1.15;dipT=wyvRideSpd>8?.8:0}
+ if(wyvSlamAnim>0){const k=1-wyvSlamAnim/.45;upT=k<.5?.6:0;dipT=k<.5?0:1;upRate=9}
+ wyvUp=DMP(wyvUp,upT,upRate,dt);wyvDip=DMP(wyvDip,dipT,6,dt);wyvCr=DMP(wyvCr,crT,2.5,dt);wyvWalk=DMP(wyvWalk,moved?1:0,6,dt);
+ const wk=wyvWalk,sw=Math.sin(wyvPh),up=wyvUp,dip=wyvDip,cr=wyvCr;
+ if(st==='STAGGERED'){const b=Math.sin(t*1.2);P.torso.scale.set(1+.025*b,1+.06*b,1+.03*b)}   // หอบช้าๆ
+ P.torso.position.y=.05+P.torso.scale.y-.45*cr+.07*Math.abs(sw)*wk+.55*up;
+ P.torso.rotation.x=.5*up-.08*dip;P.torso.rotation.z=.035*sw*wk;
+ P.neck.rotation.x+=.28*up-.42*dip-.32*cr;P.head.rotation.x+=-.24*up-.15*dip-.12*cr;
+ P.neckJ.forEach((j,i)=>j.rotation.y=.06*Math.sin(wyvPh-.3*i)*wk);
+ P.tail.rotation.y=.38*Math.sin(wyvPh-.9)*wk;
+ P.legL.rotation.x=-sw*.5*wk;P.legR.rotation.x=sw*.5*wk;P.legL.position.y=P.legR.position.y=.85-.4*cr;
+ P.wingL.rotation.x=sw*.45*wk+.7*up+.25*cr+Math.sin(t*14)*.4*dip;P.wingR.rotation.x=-sw*.45*wk+.7*up+.25*cr;
+ if(wyvSlamAnim>0){const k=1-wyvSlamAnim/.45,w=k<.5?1.2*SS(k*2):1.2-1.6*SS((k-.5)*2);P.wingL.rotation.x=P.wingR.rotation.x=w}
+ // ---- แสงทองตอนทรุด ----
+ wyvGlow.visible=st==='STAGGERED';if(wyvGlow.visible)wyvGlow.material.opacity=.3+.12*Math.sin(t*2.2);
+ // ---- คลื่นกระแทก ----
+ for(const r of WRING){if(r.s>=1){r.m.visible=false;continue}r.s+=dt*1.4;if(r.s<0){r.m.visible=false;continue}
+  r.m.visible=true;r.m.position.set(r.x,.25,r.z);r.m.scale.setScalar(1+r.s*14);r.m.material.opacity=.8*(1-r.s)}
+ // ---- แถบ HP ----
+ let show=false;
+ if(st==='HOSTILE'&&d<45){cam.updateMatrixWorld();_wbv.set(wx,7.5,wz).project(cam);
+  if(_wbv.z<1&&Math.abs(_wbv.x)<1.1&&Math.abs(_wbv.y)<1.1){show=true;wyvBar.style.left=((_wbv.x*.5+.5)*innerWidth).toFixed(0)+'px';wyvBar.style.top=((-_wbv.y*.5+.5)*innerHeight).toFixed(0)+'px';
+   wyvFill.style.width=(100*CL(wyvernHp/wyvernMaxHp,0,1)).toFixed(1)+'%'}}
+ const dsp=show?'block':'none';if(wyvBar.style.display!==dsp)wyvBar.style.display=dsp;
+}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
+ let f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0);
+ if(tl){f=Math.max(-1,Math.min(1,-tl.dy/50));s=Math.max(-1,Math.min(1,tl.dx/50))}
+ const ku=me.userData;if(lock||dashT>0){f=0;s=0}const sp=(keys.ShiftLeft?9:5)*(Math.hypot(f,s)>1?1/Math.hypot(f,s):1);
+ const vx=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*sp,vz=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*sp;
+ if(mountAnim){}else if(ridingDragon)flyMove(dt,f,s);else if(ridingWyvern)wyvernRideMove(dt,f,s);else{if(!blocked(px+vx*dt,pz))px+=vx*dt;if(!blocked(px,pz+vz*dt))pz+=vz*dt}
+ const moving=Math.hypot(f,s)>.05;
+ if(dashT>0){dashT-=dt;const v=16.5*Math.sin(Math.PI*CL(1-dashT/ROLL,0,1)),dx=-Math.sin(yaw)*v*dt,dz=-Math.cos(yaw)*v*dt;if(!blocked(px+dx,pz))px+=dx;if(!blocked(px,pz+dz))pz+=dz}
+ if(pkx*pkx+pkz*pkz>.01){if(!blocked(px+pkx*dt,pz))px+=pkx*dt;if(!blocked(px,pz+pkz*dt))pz+=pkz*dt;pkx*=1-8*dt;pkz*=1-8*dt}
+ dashCd=Math.max(0,dashCd-dt);
+ forestAmbienceSfx(dt,ridingDragon?flyY:0);
+ if(mountAnim)updMountAnim(dt);   // ขึ้น/ลงมังกร: แอนิเมชันกำหนด px,pz,yaw เอง
+ ku.roll=dashT>0?CL(1-dashT/ROLL,0,1):-1;anim(me,mountAnim?mountAnim.spd:ridingDragon||ridingWyvern?0:Math.hypot(vx,vz),dt,T);me.position.set(px,0,pz);me.rotation.y=yaw;
+ const pSpd=Math.hypot(vx,vz);
+ if(!ridingDragon&&!ridingWyvern&&!mountAnim&&dashT<=0&&pSpd>.5){
+  const stIdx=Math.floor((ku.ph+Math.PI/2)/Math.PI);
+  if(stIdx!==ku.lastSt){ku.lastSt=stIdx;playerSfx.step(pSpd>6.5)}
+ }else ku.lastSt=Math.floor((ku.ph+Math.PI/2)/Math.PI);
+ me.rotation.x=0;poseRider();syncDragon(dt);
+ if(ridingDragon&&!mountAnim&&dragonUnlocked){dragonG.updateMatrixWorld(true);me.position.copy(dSaddle.localToWorld(_sd.set(0,.1,0)));me.rotation.set((dragPitch+dSaddle.rotation.x)*.75,dragonYaw,dragBank*.65,'YXZ')}   // ผู้เล่นนั่งอิงอาน (dSaddle) โน้มตามก้ม-เงย+เอียงปีกของมังกร
+ if(ridingWyvern){const gy=groundY(px,pz);wyvernG.position.set(px,gy,pz);wyvernG.rotation.set(0,wyvernYaw,0);me.position.set(px,gy+2.75,pz);me.rotation.set(0,wyvernYaw,0)}
+ updReins(dt);   // สายบังเหียน: อัปเดตหลังผู้เล่นนั่งบนอานแล้ว (มือถึงตำแหน่งจริงของเฟรมนี้)
+ pl.position.set(px,2.4,pz);pl.intensity=torchOn?1.6+Math.random()*.4:0;
+ // camera: smooth blend 1st <-> 3rd person
+ camT+=(mode-camT)*Math.min(1,dt*6);me.visible=true;me.userData.head.visible=camT>.35;   // มุมมองที่ 1: เห็นลำตัว/แขน/ขา ซ่อนเฉพาะศีรษะไม่ให้บังกล้อง
+ {const bt=mode?'📷 มุมมอง 3 (V)':'📷 มุมมอง 1 (V)';if(BTN.textContent!==bt)BTN.textContent=bt}
+ wyvCamK=DMP(wyvCamK,ridingWyvern?1:0,5,dt);const camR=mountAnim?mountAnim.q:ridingDragon?1:0,cp=Math.cos(pitch),dir=new V3(-Math.sin(yaw)*cp,Math.sin(pitch),-Math.cos(yaw)*cp),head=new V3(px,LP(1.65,flyY+2.8,camR)+3.2*wyvCamK,pz);
+ me.updateMatrixWorld(true);me.userData.head.localToWorld(_eye.set(0,.02,-.16));head.lerpVectors(_eye,head,camT);   // จุดอ้างอิงกล้อง: มุมมอง 1 = ดวงตาจริงของตัวละคร (ตามก้าวเดิน/กลิ้ง/ขึ้นขี่/เอียงตัวมังกร) → มุมมอง 3 เบลนด์ไปจุดเหนือศีรษะ
+ cam.position.copy(head).addScaledVector(dir,-camT*LP(LP(4.2,9,camR),8,wyvCamK));cam.position.y+=camT*.9;cam.position.y=Math.max(.4,cam.position.y);
+ if(shk>0){shk=Math.max(0,shk-dt);cam.position.x+=R(-1,1)*shk*.25;cam.position.y+=R(-1,1)*shk*.25}
+ cam.lookAt(head.clone().addScaledVector(dir,10));
+ // ปุ่ม E ลอยตามตัวมังกร: โชว์เมื่อปลดล็อกแล้ว+ไม่ได้ขี่+ไม่อยู่ในแอนิเมชัน+เข้าใกล้ ≤6.5 → ฉายพิกัดโลกกลางอานเป็นพิกัดจอ แล้วกดค้างจนวงแหวนเต็มจึงขึ้นขี่
+  {let shown=false,near=false;
+  if(dragonUnlocked&&!ridingDragon&&!mountAnim&&!lock&&!aiCall&&dragonG.visible){
+   const dd=Math.hypot(px-dragonG.position.x,pz-dragonG.position.z);near=dd<=6.5&&aiH<=.4;   // ใกล้+อยู่พื้น = ขึ้นขี่ทันที · บินอยู่/ไกล (≤120) = กดค้างเพื่อเรียกลงมาจอดก่อน
+   if(near||dd<=120){
+    dragonG.updateMatrixWorld(true);cam.updateMatrixWorld();
+    dSaddle.localToWorld(_dv.set(0,.9,0)).project(cam);
+    let ex=(_dv.x*.5+.5)*innerWidth,ey=(-_dv.y*.5+.5)*innerHeight;
+    if(near){if(_dv.z<1){shown=true;dragonE.style.left=ex+'px';dragonE.style.top=ey+'px'}}
+    else{if(_dv.z>=1){ex=innerWidth-ex;ey=innerHeight-ey}   // มังกรอยู่หลังกล้อง: พลิกพิกัด แล้วหนีบปุ่มไว้ในขอบจอ ชี้ทิศที่มังกรอยู่
+     shown=true;dragonE.style.left=CL(ex,50,innerWidth-50)+'px';dragonE.style.top=CL(ey,90,innerHeight-140)+'px'}}}
+  let tame=false;
+  if(!shown&&wyvernState==='STAGGERED'&&!ridingDragon&&!mountAnim&&!lock&&Math.hypot(px-wyvernG.position.x,pz-wyvernG.position.z)<=9){   // จับไวเวิร์น: กดค้าง 0.7 วิ
+   cam.updateMatrixWorld();_dv.set(wyvernG.position.x,4.5,wyvernG.position.z).project(cam);
+   let ex=(_dv.x*.5+.5)*innerWidth,ey=(-_dv.y*.5+.5)*innerHeight;if(_dv.z>=1){ex=innerWidth-ex;ey=innerHeight-ey}
+   shown=tame=true;dragonE.style.left=CL(ex,50,innerWidth-50)+'px';dragonE.style.top=CL(ey,90,innerHeight-140)+'px'}
+  let wmount=false;
+   if(!near&&wyvernState==='TAMED'&&!ridingDragon&&!ridingWyvern&&!mountAnim&&!lock&&Math.hypot(px-wyvernG.position.x,pz-wyvernG.position.z)<=8.5){
+    wyvernG.updateMatrixWorld(true);cam.updateMatrixWorld();wyvSaddle.localToWorld(_dv.set(0,1.6,.3)).project(cam);
+    let ex=(_dv.x*.5+.5)*innerWidth,ey=(-_dv.y*.5+.5)*innerHeight;if(_dv.z>=1){ex=innerWidth-ex;ey=innerHeight-ey}
+    shown=wmount=true;dragonE.style.left=CL(ex,50,innerWidth-50)+'px';dragonE.style.top=CL(ey,90,innerHeight-140)+'px'}
+   if(!shown){isHoldingE=false;holdMount=0;if(dragonE.style.display!=='none')dragonE.style.display='none'}
+  else{
+   dragonE.style.display='block';
+   if(isHoldingE||keys.KeyE)holdMount=Math.min(1,holdMount+dt/(tame?.7:.55));else holdMount=Math.max(0,holdMount-dt*2.5);   // ปล่อยก่อนครบ → วงแหวนค่อยๆ ลดลง
+   dragonE.style.setProperty('--p',(holdMount*100).toFixed(1)+'%');
+   dragonE.style.transform='translate(-50%,-50%) scale('+(1+.08*(isHoldingE||keys.KeyE?1:holdMount)).toFixed(3)+')';
+   if(holdMount>=1){holdMount=0;isHoldingE=false;keys.KeyE=false;dragonE.style.display='none';if(tame)tameWyvern();else if(wmount)mountWyvern();else if(near)mountDragon();else callDragon()}}}
+  if(pz>-10)updateVillage(T);
+ // atmosphere animation
+ flick.forEach((l,i)=>{const b=l.distance>40?2.8:1.8;l.intensity=b*(.75+Math.random()*.5)});
+ flames2.forEach(f=>f.scale.set(1+Math.random()*.2,1+Math.random()*.4,1));gU.value=T;gCam.value.copy(cam.position);starP.position.set(px,0,pz);moonMesh.position.set(px+240,170,pz-300);
+ moon.position.set(px+80,57,pz-100);moon.target.position.set(px,0,pz);
+ updDust(dt);updSparks(dt);updateEarthWyvern(dt,T);updateWyvernAI(dt,T);updateWyvernQuest(dt,T);renderer.render(scene,cam)}
+requestAnimationFrame(frame);
+</script></body></html>
